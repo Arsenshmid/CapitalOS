@@ -7,4 +7,7 @@ import { seedDemo } from './seed';
 
 createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);
 navigator.storage?.persist?.().catch(() => {});
-db.on('ready', async () => { if (!(await db.accounts.count())) await seedDemo(); }); // демо при первом запуске
+db.on('ready', async () => {
+  const seeded = await db.kv.get('seeded');
+  if (!seeded && !(await db.accounts.count())) await seedDemo();
+});
