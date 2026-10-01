@@ -5,6 +5,53 @@ import { VIRT, type Component, type CompCat } from '../types';
 import { toMinor, uid, todayISO } from '../engine/utils';
 
 const CATS: CompCat[] = ['CPU', 'MB', 'RAM', 'GPU', 'STORAGE', 'PSU', 'CASE', 'COOLER'];
+const ACCENTS = { blue: '#3daee9', green: '#59ad72', purple: '#8e75d8', amber: '#d9a441' } as const;
+const ACCENT_LABELS = { blue: 'Синий', green: 'Зелёный', purple: 'Фиолетовый', amber: 'Янтарный' } as const;
+type Accent = keyof typeof ACCENTS;
+type Density = 'compact' | 'comfortable' | 'spacious';
+
+function readAppearance(): { accent: Accent; density: Density } {
+  try {
+    const saved = JSON.parse(localStorage.getItem('capital-os-appearance') ?? '{}');
+    return {
+      accent: saved.accent in ACCENTS ? saved.accent : 'blue',
+      density: ['compact', 'comfortable', 'spacious'].includes(saved.density) ? saved.density : 'comfortable',
+    };
+  } catch { return { accent: 'blue', density: 'comfortable' }; }
+}
+
+function applyAppearance(appearance: { accent: Accent; density: Density }) {
+  document.documentElement.style.setProperty('--pri', ACCENTS[appearance.accent]);
+  document.documentElement.dataset.density = appearance.density;
+  try { localStorage.setItem('capital-os-appearance', JSON.stringify(appearance)); } catch {}
+}
+
+export function applySavedAppearance() {
+  applyAppearance(readAppearance());
+}
+
+function AppearanceSettings() {
+  const [appearance, setAppearance] = useState(readAppearance);
+  useEffect(() => {
+    applyAppearance(appearance);
+  }, [appearance]);
+
+  return <section className="card appearance-settings">
+    <h2>Внешний вид</h2>
+    <div className="setting-choice-row"><span>Акцентный цвет</span><div className="accent-options">
+      {(Object.keys(ACCENTS) as Accent[]).map(accent => <button type="button" key={accent} title={ACCENT_LABELS[accent]}
+        aria-label={ACCENT_LABELS[accent]} aria-pressed={appearance.accent === accent}
+        className={`accent-choice ${appearance.accent === accent ? 'selected' : ''}`}
+        onClick={() => setAppearance(current => ({ ...current, accent }))}><span style={{ background: ACCENTS[accent] }} /></button>)}
+    </div></div>
+    <div className="setting-choice-row"><span>Плотность</span><div className="density-options">
+      {([['compact', 'Компактная'], ['comfortable', 'Обычная'], ['spacious', 'Свободная']] as const).map(([density, label]) =>
+        <button type="button" key={density} aria-pressed={appearance.density === density}
+          className={appearance.density === density ? 'selected' : ''}
+          onClick={() => setAppearance(current => ({ ...current, density }))}>{label}</button>)}
+    </div></div>
+  </section>;
+}
 
 export default function Settings() {
   const kv = useLiveQuery(() => db.kv.toArray(), []) ?? [];
@@ -40,6 +87,7 @@ export default function Settings() {
 
   return (
     <div>
+      <AppearanceSettings />
       <section className="card">
         <h2>Параметры модели</h2>
         <div className="frm">

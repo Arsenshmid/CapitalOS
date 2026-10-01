@@ -1,0 +1,4018 @@
+﻿==================== .github\workflows\deploy.yml ====================
+name: Deploy Capital OS
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+==================== COPY.BAT ====================
+@echo off
+setlocal
+
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ^
+	"$root = (Get-Location).Path;" ^
+	"$out = Join-Path $root 'all_files.txt';" ^
+	"$skip = '\\(node_modules|\.git|dist|coverage)\\';" ^
+	"$files = Get-ChildItem -LiteralPath $root -File -Recurse | Where-Object { $_.FullName -ne $out -and $_.FullName -notmatch $skip -and $_.Extension -match '^\.(ts|tsx|js|jsx|json|html|css|md|txt|yml|yaml|xml|svg|bat|ps1|sh|toml|ini)$' } | Sort-Object FullName;" ^
+	"$content = foreach ($file in $files) { '==================== ' + $file.FullName.Substring($root.Length + 1) + ' ===================='; Get-Content -LiteralPath $file.FullName; '' };" ^
+	"Set-Content -LiteralPath $out -Value $content -Encoding UTF8"
+
+if errorlevel 1 exit /b 1
+echo Created all_files.txt
+
+==================== index.html ====================
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:" />
+  <title>CAPITAL OS</title>
+</head>
+<body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body>
+</html>
+
+==================== package.json ====================
+{
+  "name": "capital-os", "private": true, "type": "module",
+  "scripts": {
+    "dev": "vite", "build": "tsc --noEmit && vite build",
+    "test": "vitest run", "preview": "vite preview"
+  },
+  "dependencies": {
+    "dexie": "^4.0.8", "dexie-react-hooks": "^1.1.7",
+    "react": "^18.3.1", "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.5", "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1", "typescript": "^5.5.4",
+    "vite": "^5.4.3", "vitest": "^2.0.5"
+  }
+}
+
+==================== package-lock.json ====================
+{
+  "name": "capital-os",
+  "lockfileVersion": 3,
+  "requires": true,
+  "packages": {
+    "": {
+      "name": "capital-os",
+      "dependencies": {
+        "dexie": "^4.0.8",
+        "dexie-react-hooks": "^1.1.7",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1"
+      },
+      "devDependencies": {
+        "@types/react": "^18.3.5",
+        "@types/react-dom": "^18.3.0",
+        "@vitejs/plugin-react": "^4.3.1",
+        "typescript": "^5.5.4",
+        "vite": "^5.4.3",
+        "vitest": "^2.0.5"
+      }
+    },
+    "node_modules/@babel/code-frame": {
+      "version": "7.29.7",
+      "resolved": "https://registry.npmjs.org/@babel/code-frame/-/code-frame-7.29.7.tgz",
+      "integrity": "sha512-Aup7aUOfpbAUg2ROOJN6Iw5f9DMBlzu0mIkm/malLQFN/YQgO48wCj0Kxa3sEHJvPVFg7siR+qRInwXd2qhQKw==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/helper-validator-identifier": "^7.29.7",
+        "js-tokens": "^4.0.0",
+        "picocolors": "^1.1.1"
+      },
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/compat-data": {
+      "version": "7.29.7",
+      "resolved": "https://registry.npmjs.org/@babel/compat-data/-/compat-data-7.29.7.tgz",
+      "integrity": "sha512-locTkQyKvwIEgBzVrn8693ebc97F2U8ZHjbXwDXJ5Fn2TCpNwTlKcaKLkdHop5c/icOFE7qt7Q9JC5hnKNa6Gg==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/core": {
+      "version": "7.29.7",
+      "resolved": "https://registry.npmjs.org/@babel/core/-/core-7.29.7.tgz",
+      "integrity": "sha512-RgHBCvtjbOK2gXSNBNIkNoEc9qoVEtau3hj8gEqKQuL3HZAibKarWFEI3Lfm6EYKkLalOh8eSrj9b+ch9H/VBA==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/code-frame": "^7.29.7",
+        "@babel/generator": "^7.29.7",
+        "@babel/helper-compilation-targets": "^7.29.7",
+        "@babel/helper-module-transforms": "^7.29.7",
+        "@babel/helpers": "^7.29.7",
+        "@babel/parser": "^7.29.7",
+        "@babel/template": "^7.29.7",
+        "@babel/traverse": "^7.29.7",
+        "@babel/types": "^7.29.7",
+        "@jridgewell/remapping": "^2.3.5",
+        "convert-source-map": "^2.0.0",
+        "debug": "^4.1.0",
+        "gensync": "^1.0.0-beta.2",
+        "json5": "^2.2.3",
+        "semver": "^6.3.1"
+      },
+      "engines": {
+        "node": ">=6.9.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/babel"
+      }
+    },
+    "node_modules/@babel/generator": {
+      "version": "7.29.8",
+      "resolved": "https://registry.npmjs.org/@babel/generator/-/generator-7.29.8.tgz",
+      "integrity": "sha512-gZbepsdh3WDtgZKWL+vTPh71LSBrm/Y4/QDZBVCcYfmeTEEuoOYwlSy+G1StfJg+/Zy550u/3TATbm7qDbbMtg==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/parser": "^7.29.8",
+        "@babel/types": "^7.29.8",
+        "@jridgewell/gen-mapping": "^0.3.12",
+        "@jridgewell/trace-mapping": "^0.3.28",
+        "jsesc": "^3.0.2"
+      },
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/helper-compilation-targets": {
+      "version": "7.29.7",
+      "resolved": "https://registry.npmjs.org/@babel/helper-compilation-targets/-/helper-compilation-targets-7.29.7.tgz",
+      "integrity": "sha512-wem6WaBj4NaVYVdNhLPPVacES6ZJ+KBBfSkTMD3YZxbP3rm3Di85tJU5ljaUNhaOynt+Aj0xruhYuzQBt8n71g==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/compat-data": "^7.29.7",
+        "@babel/helper-validator-option": "^7.29.7",
+        "browserslist": "^4.24.0",
+        "lru-cache": "^5.1.1",
+        "semver": "^6.3.1"
+      },
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/helper-globals": {
+      "version": "7.29.7",
+      "resolved": "https://registry.npmjs.org/@babel/helper-globals/-/helper-globals-7.29.7.tgz",
+      "integrity": "sha512-3nQVUAtvkKH9zahfWgw96Jc/uFOmjACE1kQz82E2lqWmHBgjzbNlsC22nuQTfahmWeQtTq5nQ/4Nnd2A1wj4zA==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/helper-module-imports": {
+      "version": "7.29.7",
+      "resolved": "https://registry.npmjs.org/@babel/helper-module-imports/-/helper-module-imports-7.29.7.tgz",
+      "integrity": "sha512-ejHwrQQYcm9xnTivShn2IDOlIzInN34AXskvq9QicvCtEzq1Vzclu/tKF8Jq1Cg8JG2GL6/EmjgsCT7lXepE3g==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/traverse": "^7.29.7",
+        "@babel/types": "^7.29.7"
+      },
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/helper-module-transforms": {
+      "version": "7.29.7",
+      "resolved": "https://registry.npmjs.org/@babel/helper-module-transforms/-/helper-module-transforms-7.29.7.tgz",
+      "integrity": "sha512-UPUVSyXbOh627KiCIGQSgwWzGeBKLkaJ9PJEdrngIwMSzxLR4jS4+f1f1jb7VzBbg8nFLaYotvVPFCTqdrmTAg==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/helper-module-imports": "^7.29.7",
+        "@babel/helper-validator-identifier": "^7.29.7",
+        "@babel/traverse": "^7.29.7"
+      },
+      "engines": {
+        "node": ">=6.9.0"
+      },
+      "peerDependencies": {
+        "@babel/core": "^7.0.0"
+      }
+    },
+    "node_modules/@babel/helper-plugin-utils": {
+      "version": "7.29.7",
+      "resolved": "https://registry.npmjs.org/@babel/helper-plugin-utils/-/helper-plugin-utils-7.29.7.tgz",
+      "integrity": "sha512-G7sHYigPY17oO5SYWnfD/0MTBwVR781S/JI643e/JhUYgVgWE/61SoW3NH9KWUKyKq5LVh3npif99Wkt6j86Jw==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/helper-string-parser": {
+      "version": "7.29.7",
+      "resolved": "https://registry.npmjs.org/@babel/helper-string-parser/-/helper-string-parser-7.29.7.tgz",
+      "integrity": "sha512-Pb5ijPrZ89GDH8223L4UP8i6QApWxs04RbPQJTeWDV0/keR2E36MeKnyr6LYmUUvqRRI+Iv87SuF1W6ErINzYw==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/helper-validator-identifier": {
+      "version": "7.29.7",
+      "resolved": "https://registry.npmjs.org/@babel/helper-validator-identifier/-/helper-validator-identifier-7.29.7.tgz",
+      "integrity": "sha512-qehxGkRj55h/ff8EMaJ+cYhyaKlHIxqYDn682wQD7RNp9UujOQsHog2uS0r2vzr4pW+sXf90NeeayjcNaX3fFg==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/helper-validator-option": {
+      "version": "7.29.7",
+      "resolved": "https://registry.npmjs.org/@babel/helper-validator-option/-/helper-validator-option-7.29.7.tgz",
+      "integrity": "sha512-N9ZErrD+yW5geCDtBqnOoxmR8+tNKiGuxKlDpuJxfsqpa2dFcexaziGAE/qoHLiDDreVNMupxGmSoNlyvsA3gw==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/helpers": {
+      "version": "7.29.7",
+      "resolved": "https://registry.npmjs.org/@babel/helpers/-/helpers-7.29.7.tgz",
+      "integrity": "sha512-1k2lAGRMfHTcwuNYcCNUmaUffmQv8KWMfh2iJUUeRlwlwH4FdNG7mfPI10NPfLHJFThE4Tyr4mv7kTNZOiPuBg==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/template": "^7.29.7",
+        "@babel/types": "^7.29.7"
+      },
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/parser": {
+      "version": "7.29.9",
+      "resolved": "https://registry.npmjs.org/@babel/parser/-/parser-7.29.9.tgz",
+      "integrity": "sha512-CjXrNHTnvqBVqHgdBysY3vk2T8tpJHb5/RMeHJBTyVa9xgugCB0CJTx/3oO8RV2QRQP391RWpB7D6hLjm8V9uA==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/types": "^7.29.8"
+      },
+      "bin": {
+        "parser": "bin/babel-parser.js"
+      },
+      "engines": {
+        "node": ">=6.0.0"
+      }
+    },
+    "node_modules/@babel/plugin-transform-react-jsx-self": {
+      "version": "7.29.7",
+      "resolved": "https://registry.npmjs.org/@babel/plugin-transform-react-jsx-self/-/plugin-transform-react-jsx-self-7.29.7.tgz",
+      "integrity": "sha512-TL0hMc9xzy86VD31nUiwzd5otRAcyEPcsegCxolO0PvcXuH1v0kECe/UIznYFihpkvU5wg/jk4v0TTEFfm53fw==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/helper-plugin-utils": "^7.29.7"
+      },
+      "engines": {
+        "node": ">=6.9.0"
+      },
+      "peerDependencies": {
+        "@babel/core": "^7.0.0-0"
+      }
+    },
+    "node_modules/@babel/plugin-transform-react-jsx-source": {
+      "version": "7.29.7",
+      "resolved": "https://registry.npmjs.org/@babel/plugin-transform-react-jsx-source/-/plugin-transform-react-jsx-source-7.29.7.tgz",
+      "integrity": "sha512-06IyK09H3wi4cGbhDBwp5gUGo0IKtnYa8tyTiephirPCK6fbobVGiXMMI5zLQ4aKEYP3wZ3ArU44o+8KMrSG/Q==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/helper-plugin-utils": "^7.29.7"
+      },
+      "engines": {
+        "node": ">=6.9.0"
+      },
+      "peerDependencies": {
+        "@babel/core": "^7.0.0-0"
+      }
+    },
+    "node_modules/@babel/template": {
+      "version": "7.29.7",
+      "resolved": "https://registry.npmjs.org/@babel/template/-/template-7.29.7.tgz",
+      "integrity": "sha512-puq+Gf35oI24FeN11LkoUQFqv9uwNeWpxXZi/Ji3rRIoKAzKnxRaZ+Gkj0vKS9ZCiTESfng1N9LyOyXvo+m+Gg==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/code-frame": "^7.29.7",
+        "@babel/parser": "^7.29.7",
+        "@babel/types": "^7.29.7"
+      },
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/traverse": {
+      "version": "7.29.8",
+      "resolved": "https://registry.npmjs.org/@babel/traverse/-/traverse-7.29.8.tgz",
+      "integrity": "sha512-I5z7H3bf/41ktsNVLtpN0wAa336HkqIHQ5BuPLEhTkt1jVSyZpeNKIzTgEWmlxjdg81R0IgUCcaE+Ok3NvrfZg==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/code-frame": "^7.29.7",
+        "@babel/generator": "^7.29.8",
+        "@babel/helper-globals": "^7.29.7",
+        "@babel/parser": "^7.29.8",
+        "@babel/template": "^7.29.7",
+        "@babel/types": "^7.29.8",
+        "debug": "^4.3.1"
+      },
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/types": {
+      "version": "7.29.8",
+      "resolved": "https://registry.npmjs.org/@babel/types/-/types-7.29.8.tgz",
+      "integrity": "sha512-Vj1jF3cPfxg7OAfoI7QnVKLoILlm2JF9pnVHrX8qx7AHMiYWT+NDAA7jChlNgRS4WTLc/fD1lXLmPixluj+3Gg==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/helper-string-parser": "^7.29.7",
+        "@babel/helper-validator-identifier": "^7.29.7"
+      },
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@esbuild/aix-ppc64": {
+      "version": "0.21.5",
+      "resolved": "https://registry.npmjs.org/@esbuild/aix-ppc64/-/aix-ppc64-0.21.5.tgz",
+      "integrity": "sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==",
+      "cpu": [
+        "ppc64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "aix"
+      ],
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/@esbuild/android-arm": {
+      "version": "0.21.5",
+      "resolved": "https://registry.npmjs.org/@esbuild/android-arm/-/android-arm-0.21.5.tgz",
+      "integrity": "sha512-vCPvzSjpPHEi1siZdlvAlsPxXl7WbOVUBBAowWug4rJHb68Ox8KualB+1ocNvT5fjv6wpkX6o/iEpbDrf68zcg==",
+      "cpu": [
+        "arm"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "android"
+      ],
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/@esbuild/android-arm64": {
+      "version": "0.21.5",
+      "resolved": "https://registry.npmjs.org/@esbuild/android-arm64/-/android-arm64-0.21.5.tgz",
+      "integrity": "sha512-c0uX9VAUBQ7dTDCjq+wdyGLowMdtR/GoC2U5IYk/7D1H1JYC0qseD7+11iMP2mRLN9RcCMRcjC4YMclCzGwS/A==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "android"
+      ],
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/@esbuild/android-x64": {
+      "version": "0.21.5",
+      "resolved": "https://registry.npmjs.org/@esbuild/android-x64/-/android-x64-0.21.5.tgz",
+      "integrity": "sha512-D7aPRUUNHRBwHxzxRvp856rjUHRFW1SdQATKXH2hqA0kAZb1hKmi02OpYRacl0TxIGz/ZmXWlbZgjwWYaCakTA==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "android"
+      ],
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/@esbuild/darwin-arm64": {
+      "version": "0.21.5",
+      "resolved": "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.21.5.tgz",
+      "integrity": "sha512-DwqXqZyuk5AiWWf3UfLiRDJ5EDd49zg6O9wclZ7kUMv2WRFr4HKjXp/5t8JZ11QbQfUS6/cRCKGwYhtNAY88kQ==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "darwin"
+      ],
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/@esbuild/darwin-x64": {
+      "version": "0.21.5",
+      "resolved": "https://registry.npmjs.org/@esbuild/darwin-x64/-/darwin-x64-0.21.5.tgz",
+      "integrity": "sha512-se/JjF8NlmKVG4kNIuyWMV/22ZaerB+qaSi5MdrXtd6R08kvs2qCN4C09miupktDitvh8jRFflwGFBQcxZRjbw==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "darwin"
+      ],
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/@esbuild/freebsd-arm64": {
+      "version": "0.21.5",
+      "resolved": "https://registry.npmjs.org/@esbuild/freebsd-arm64/-/freebsd-arm64-0.21.5.tgz",
+      "integrity": "sha512-5JcRxxRDUJLX8JXp/wcBCy3pENnCgBR9bN6JsY4OmhfUtIHe3ZW0mawA7+RDAcMLrMIZaf03NlQiX9DGyB8h4g==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "freebsd"
+      ],
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/@esbuild/freebsd-x64": {
+      "version": "0.21.5",
+      "resolved": "https://registry.npmjs.org/@esbuild/freebsd-x64/-/freebsd-x64-0.21.5.tgz",
+      "integrity": "sha512-J95kNBj1zkbMXtHVH29bBriQygMXqoVQOQYA+ISs0/2l3T9/kj42ow2mpqerRBxDJnmkUDCaQT/dfNXWX/ZZCQ==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "freebsd"
+      ],
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/@esbuild/linux-arm": {
+      "version": "0.21.5",
+      "resolved": "https://registry.npmjs.org/@esbuild/linux-arm/-/linux-arm-0.21.5.tgz",
+      "integrity": "sha512-bPb5AHZtbeNGjCKVZ9UGqGwo8EUu4cLq68E95A53KlxAPRmUyYv2D6F0uUI65XisGOL1hBP5mTronbgo+0bFcA==",
+      "cpu": [
+        "arm"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/@esbuild/linux-arm64": {
+      "version": "0.21.5",
+      "resolved": "https://registry.npmjs.org/@esbuild/linux-arm64/-/linux-arm64-0.21.5.tgz",
+      "integrity": "sha512-ibKvmyYzKsBeX8d8I7MH/TMfWDXBF3db4qM6sy+7re0YXya+K1cem3on9XgdT2EQGMu4hQyZhan7TeQ8XkGp4Q==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/@esbuild/linux-ia32": {
+      "version": "0.21.5",
+      "resolved": "https://registry.npmjs.org/@esbuild/linux-ia32/-/linux-ia32-0.21.5.tgz",
+      "integrity": "sha512-YvjXDqLRqPDl2dvRODYmmhz4rPeVKYvppfGYKSNGdyZkA01046pLWyRKKI3ax8fbJoK5QbxblURkwK/MWY18Tg==",
+      "cpu": [
+        "ia32"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/@esbuild/linux-loong64": {
+      "version": "0.21.5",
+      "resolved": "https://registry.npmjs.org/@esbuild/linux-loong64/-/linux-loong64-0.21.5.tgz",
+      "integrity": "sha512-uHf1BmMG8qEvzdrzAqg2SIG/02+4/DHB6a9Kbya0XDvwDEKCoC8ZRWI5JJvNdUjtciBGFQ5PuBlpEOXQj+JQSg==",
+      "cpu": [
+        "loong64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/@esbuild/linux-mips64el": {
+      "version": "0.21.5",
+      "resolved": "https://registry.npmjs.org/@esbuild/linux-mips64el/-/linux-mips64el-0.21.5.tgz",
+      "integrity": "sha512-IajOmO+KJK23bj52dFSNCMsz1QP1DqM6cwLUv3W1QwyxkyIWecfafnI555fvSGqEKwjMXVLokcV5ygHW5b3Jbg==",
+      "cpu": [
+        "mips64el"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/@esbuild/linux-ppc64": {
+      "version": "0.21.5",
+      "resolved": "https://registry.npmjs.org/@esbuild/linux-ppc64/-/linux-ppc64-0.21.5.tgz",
+      "integrity": "sha512-1hHV/Z4OEfMwpLO8rp7CvlhBDnjsC3CttJXIhBi+5Aj5r+MBvy4egg7wCbe//hSsT+RvDAG7s81tAvpL2XAE4w==",
+      "cpu": [
+        "ppc64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/@esbuild/linux-riscv64": {
+      "version": "0.21.5",
+      "resolved": "https://registry.npmjs.org/@esbuild/linux-riscv64/-/linux-riscv64-0.21.5.tgz",
+      "integrity": "sha512-2HdXDMd9GMgTGrPWnJzP2ALSokE/0O5HhTUvWIbD3YdjME8JwvSCnNGBnTThKGEB91OZhzrJ4qIIxk/SBmyDDA==",
+      "cpu": [
+        "riscv64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/@esbuild/linux-s390x": {
+      "version": "0.21.5",
+      "resolved": "https://registry.npmjs.org/@esbuild/linux-s390x/-/linux-s390x-0.21.5.tgz",
+      "integrity": "sha512-zus5sxzqBJD3eXxwvjN1yQkRepANgxE9lgOW2qLnmr8ikMTphkjgXu1HR01K4FJg8h1kEEDAqDcZQtbrRnB41A==",
+      "cpu": [
+        "s390x"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/@esbuild/linux-x64": {
+      "version": "0.21.5",
+      "resolved": "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.21.5.tgz",
+      "integrity": "sha512-1rYdTpyv03iycF1+BhzrzQJCdOuAOtaqHTWJZCWvijKD2N5Xu0TtVC8/+1faWqcP9iBCWOmjmhoH94dH82BxPQ==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/@esbuild/netbsd-x64": {
+      "version": "0.21.5",
+      "resolved": "https://registry.npmjs.org/@esbuild/netbsd-x64/-/netbsd-x64-0.21.5.tgz",
+      "integrity": "sha512-Woi2MXzXjMULccIwMnLciyZH4nCIMpWQAs049KEeMvOcNADVxo0UBIQPfSmxB3CWKedngg7sWZdLvLczpe0tLg==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "netbsd"
+      ],
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/@esbuild/openbsd-x64": {
+      "version": "0.21.5",
+      "resolved": "https://registry.npmjs.org/@esbuild/openbsd-x64/-/openbsd-x64-0.21.5.tgz",
+      "integrity": "sha512-HLNNw99xsvx12lFBUwoT8EVCsSvRNDVxNpjZ7bPn947b8gJPzeHWyNVhFsaerc0n3TsbOINvRP2byTZ5LKezow==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "openbsd"
+      ],
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/@esbuild/sunos-x64": {
+      "version": "0.21.5",
+      "resolved": "https://registry.npmjs.org/@esbuild/sunos-x64/-/sunos-x64-0.21.5.tgz",
+      "integrity": "sha512-6+gjmFpfy0BHU5Tpptkuh8+uw3mnrvgs+dSPQXQOv3ekbordwnzTVEb4qnIvQcYXq6gzkyTnoZ9dZG+D4garKg==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "sunos"
+      ],
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/@esbuild/win32-arm64": {
+      "version": "0.21.5",
+      "resolved": "https://registry.npmjs.org/@esbuild/win32-arm64/-/win32-arm64-0.21.5.tgz",
+      "integrity": "sha512-Z0gOTd75VvXqyq7nsl93zwahcTROgqvuAcYDUr+vOv8uHhNSKROyU961kgtCD1e95IqPKSQKH7tBTslnS3tA8A==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "win32"
+      ],
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/@esbuild/win32-ia32": {
+      "version": "0.21.5",
+      "resolved": "https://registry.npmjs.org/@esbuild/win32-ia32/-/win32-ia32-0.21.5.tgz",
+      "integrity": "sha512-SWXFF1CL2RVNMaVs+BBClwtfZSvDgtL//G/smwAc5oVK/UPu2Gu9tIaRgFmYFFKrmg3SyAjSrElf0TiJ1v8fYA==",
+      "cpu": [
+        "ia32"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "win32"
+      ],
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/@esbuild/win32-x64": {
+      "version": "0.21.5",
+      "resolved": "https://registry.npmjs.org/@esbuild/win32-x64/-/win32-x64-0.21.5.tgz",
+      "integrity": "sha512-tQd/1efJuzPC6rCFwEvLtci/xNFcTZknmXs98FYDfGE4wP9ClFV98nyKrzJKVPMhdDnjzLhdUyMX4PsQAPjwIw==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "win32"
+      ],
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/@jridgewell/gen-mapping": {
+      "version": "0.3.13",
+      "resolved": "https://registry.npmjs.org/@jridgewell/gen-mapping/-/gen-mapping-0.3.13.tgz",
+      "integrity": "sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@jridgewell/sourcemap-codec": "^1.5.0",
+        "@jridgewell/trace-mapping": "^0.3.24"
+      }
+    },
+    "node_modules/@jridgewell/remapping": {
+      "version": "2.3.5",
+      "resolved": "https://registry.npmjs.org/@jridgewell/remapping/-/remapping-2.3.5.tgz",
+      "integrity": "sha512-LI9u/+laYG4Ds1TDKSJW2YPrIlcVYOwi2fUC6xB43lueCjgxV4lffOCZCtYFiH6TNOX+tQKXx97T4IKHbhyHEQ==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@jridgewell/gen-mapping": "^0.3.5",
+        "@jridgewell/trace-mapping": "^0.3.24"
+      }
+    },
+    "node_modules/@jridgewell/resolve-uri": {
+      "version": "3.1.2",
+      "resolved": "https://registry.npmjs.org/@jridgewell/resolve-uri/-/resolve-uri-3.1.2.tgz",
+      "integrity": "sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=6.0.0"
+      }
+    },
+    "node_modules/@jridgewell/sourcemap-codec": {
+      "version": "1.6.0",
+      "resolved": "https://registry.npmjs.org/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.6.0.tgz",
+      "integrity": "sha512-T7jf+5zgsZHwNJ4lvQ7/aezbyk0nNX+zJVWpmHA7VYsEx7a7qr5Rg5IbtJFqkgze5Y2sruq1RUY8Q837Od7iFw==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/@jridgewell/trace-mapping": {
+      "version": "0.3.31",
+      "resolved": "https://registry.npmjs.org/@jridgewell/trace-mapping/-/trace-mapping-0.3.31.tgz",
+      "integrity": "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@jridgewell/resolve-uri": "^3.1.0",
+        "@jridgewell/sourcemap-codec": "^1.4.14"
+      }
+    },
+    "node_modules/@napi-rs/lzma-linux-x64-gnu": {
+      "version": "1.5.1",
+      "resolved": "https://registry.npmjs.org/@napi-rs/lzma-linux-x64-gnu/-/lzma-linux-x64-gnu-1.5.1.tgz",
+      "integrity": "sha512-oTXEIha4SsuXdTA4Iyskj0kpdx2yVXdhd75c2v3xGrHFfVMsbhTPZU/nMPL4sWKo4pBHm3aucLaqGlF696dTyQ==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "libc": [
+        "glibc"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": "^22.20 || ^24.12 || >=25"
+      }
+    },
+    "node_modules/@rolldown/pluginutils": {
+      "version": "1.0.0-beta.27",
+      "resolved": "https://registry.npmjs.org/@rolldown/pluginutils/-/pluginutils-1.0.0-beta.27.tgz",
+      "integrity": "sha512-+d0F4MKMCbeVUJwG96uQ4SgAznZNSq93I3V+9NHA4OpvqG8mRCpGdKmK8l/dl02h2CCDHwW2FqilnTyDcAnqjA==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/@rollup/rollup-android-arm-eabi": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/@rollup/rollup-android-arm-eabi/-/rollup-android-arm-eabi-4.63.5.tgz",
+      "integrity": "sha512-J25QJU+B78T4FhhBsNpLJyVWOi31mwtpcMwywHmOKH65Q9IWGA81gPj+dnwlhU8wktVriYE+tFAaQgrnJRzAZg==",
+      "cpu": [
+        "arm"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "android"
+      ]
+    },
+    "node_modules/@rollup/rollup-android-arm64": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/@rollup/rollup-android-arm64/-/rollup-android-arm64-4.63.5.tgz",
+      "integrity": "sha512-LDopB3zuZM5Ux9TT2luNEBJW/tYbGU2g1d+VpKk6I+gSKDb+/7sYE6M225gRQt4RbMX6MSwMsVR/phdjVUgRLg==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "android"
+      ]
+    },
+    "node_modules/@rollup/rollup-darwin-arm64": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/@rollup/rollup-darwin-arm64/-/rollup-darwin-arm64-4.63.5.tgz",
+      "integrity": "sha512-wlJEERGfeuHeBavCL2qVnNacOK43NDoZM4sjkeRPymd04OAE9T1zBqDJgmZ+CIsPTYKwdzpUC8vmOw84dwY4Tg==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "darwin"
+      ]
+    },
+    "node_modules/@rollup/rollup-darwin-x64": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/@rollup/rollup-darwin-x64/-/rollup-darwin-x64-4.63.5.tgz",
+      "integrity": "sha512-4nJJGg5jbo2wwPP4JP+LfEBA3bvP8rU9CLuhp7jWvq9sxEyhjQFTFdrqi+/dHEin/pd8jpT0vcehIpnZtmEdcQ==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "darwin"
+      ]
+    },
+    "node_modules/@rollup/rollup-freebsd-arm64": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/@rollup/rollup-freebsd-arm64/-/rollup-freebsd-arm64-4.63.5.tgz",
+      "integrity": "sha512-DrZbyCDF1hneuO6jRbvZ2D7+PIBM6yIwYnJpg2vIk58T+wuFpiaGZrfUr59lDWw45bg+IrpTGLPiNi/Fk4w3Cg==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "freebsd"
+      ]
+    },
+    "node_modules/@rollup/rollup-freebsd-x64": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/@rollup/rollup-freebsd-x64/-/rollup-freebsd-x64-4.63.5.tgz",
+      "integrity": "sha512-gqfUVMJMB3mehqywxp6hTBFfgtMQykZY19+cfiaYP0toIJLb/1DZRJHVkQQGP13W4TAwfZDWeg1qBcheTRioXQ==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "freebsd"
+      ]
+    },
+    "node_modules/@rollup/rollup-linux-arm-gnueabihf": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/@rollup/rollup-linux-arm-gnueabihf/-/rollup-linux-arm-gnueabihf-4.63.5.tgz",
+      "integrity": "sha512-CFmhpvAwzSaWMlN3VN7UtmoTihlZNzoP0juQib5TQRnYUyDV8dXeWOp29sobWAT6gXl/hQgAClLlEiYozQG3OQ==",
+      "cpu": [
+        "arm"
+      ],
+      "dev": true,
+      "libc": [
+        "glibc"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ]
+    },
+    "node_modules/@rollup/rollup-linux-arm-musleabihf": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/@rollup/rollup-linux-arm-musleabihf/-/rollup-linux-arm-musleabihf-4.63.5.tgz",
+      "integrity": "sha512-Uc9H8eXCOayV6JLTH5bXKMId6qbhNHa818/BgYjm4jrlq3vZquC9cqyvHBw17xy5Mnj5f+I3gFK5JcEf3hSqrw==",
+      "cpu": [
+        "arm"
+      ],
+      "dev": true,
+      "libc": [
+        "musl"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ]
+    },
+    "node_modules/@rollup/rollup-linux-arm64-gnu": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/@rollup/rollup-linux-arm64-gnu/-/rollup-linux-arm64-gnu-4.63.5.tgz",
+      "integrity": "sha512-VcPr/szv/1BFw112Kt//fxulXt/JPqzzidU84iW68L2DdjnOO8QFUv2zTSYBEPHD6movBD4z+bbr5y60GYM7Jw==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "libc": [
+        "glibc"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ]
+    },
+    "node_modules/@rollup/rollup-linux-arm64-musl": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/@rollup/rollup-linux-arm64-musl/-/rollup-linux-arm64-musl-4.63.5.tgz",
+      "integrity": "sha512-BnxtJ5/91BrIHYIkGrmjz/lbMhqEHt1dPFqIxIFR+jPn0xVc/oUSCtIT089zfp5ufwGDlYz2UC+Fe1SRBpYFbQ==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "libc": [
+        "musl"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ]
+    },
+    "node_modules/@rollup/rollup-linux-loong64-gnu": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/@rollup/rollup-linux-loong64-gnu/-/rollup-linux-loong64-gnu-4.63.5.tgz",
+      "integrity": "sha512-LrYcHZwF+fAMNKHYTOQ5osWM4AZF7YF6D+XtsjDyEvljtt11twc+zHVXBLNEjxVSUnKYsOhvVz4Z213eW02COQ==",
+      "cpu": [
+        "loong64"
+      ],
+      "dev": true,
+      "libc": [
+        "glibc"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ]
+    },
+    "node_modules/@rollup/rollup-linux-loong64-musl": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/@rollup/rollup-linux-loong64-musl/-/rollup-linux-loong64-musl-4.63.5.tgz",
+      "integrity": "sha512-nj7QKQePAAUpCpJHtg0pR0W/b92A9NO17JS3BAQmHDn/yhmkir2p8llrKY9TOhleKIaSzy1JhxS3T9FVld6coA==",
+      "cpu": [
+        "loong64"
+      ],
+      "dev": true,
+      "libc": [
+        "musl"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ]
+    },
+    "node_modules/@rollup/rollup-linux-ppc64-gnu": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/@rollup/rollup-linux-ppc64-gnu/-/rollup-linux-ppc64-gnu-4.63.5.tgz",
+      "integrity": "sha512-5ylkX6dWMeBKge9nTU+Rxfb+ZfaCIJ9lRqIFaK0eAMcWp7OJbYnLveLgXmm0VrvuLKb8qIK+mHyH0qu88RM+iA==",
+      "cpu": [
+        "ppc64"
+      ],
+      "dev": true,
+      "libc": [
+        "glibc"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ]
+    },
+    "node_modules/@rollup/rollup-linux-ppc64-musl": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/@rollup/rollup-linux-ppc64-musl/-/rollup-linux-ppc64-musl-4.63.5.tgz",
+      "integrity": "sha512-oHK4ZHYFDKjZviK34I+NwgfbGxgI7ztrNxj2hPTSSNFgeq1a/lEd7dHV2fdGAuTH4Iym3RHJg+vAbWaWG4B7Zg==",
+      "cpu": [
+        "ppc64"
+      ],
+      "dev": true,
+      "libc": [
+        "musl"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ]
+    },
+    "node_modules/@rollup/rollup-linux-riscv64-gnu": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/@rollup/rollup-linux-riscv64-gnu/-/rollup-linux-riscv64-gnu-4.63.5.tgz",
+      "integrity": "sha512-UcetmHZ6XOXuUByiKZyQmb55ZPr0LABr3Ec/HB9wKZn6CEAFWZkE+hsJErJ9hbPBC7nI0dKuELx7CoV6IM7TMg==",
+      "cpu": [
+        "riscv64"
+      ],
+      "dev": true,
+      "libc": [
+        "glibc"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ]
+    },
+    "node_modules/@rollup/rollup-linux-riscv64-musl": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/@rollup/rollup-linux-riscv64-musl/-/rollup-linux-riscv64-musl-4.63.5.tgz",
+      "integrity": "sha512-C5CmDPQBtvjVo8cgQsBs+w6WB0JLkiixhgi6hVLV11hERWdn/p0XcPU2OUcZzac9BPOFq7SbaHFa8r3SWEysCQ==",
+      "cpu": [
+        "riscv64"
+      ],
+      "dev": true,
+      "libc": [
+        "musl"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ]
+    },
+    "node_modules/@rollup/rollup-linux-s390x-gnu": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/@rollup/rollup-linux-s390x-gnu/-/rollup-linux-s390x-gnu-4.63.5.tgz",
+      "integrity": "sha512-lHVQHJFKsuuxLMi3MQO9XVL8Tje3JR82CzB+QDKC5NWBcsIWuwsn9uIM5e3lBhI+fF1/s63qnyYqsg65+8rV/w==",
+      "cpu": [
+        "s390x"
+      ],
+      "dev": true,
+      "libc": [
+        "glibc"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ]
+    },
+    "node_modules/@rollup/rollup-linux-x64-gnu": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/@rollup/rollup-linux-x64-gnu/-/rollup-linux-x64-gnu-4.63.5.tgz",
+      "integrity": "sha512-3W9bTFcQNJn71cSJVM9RKIiZOy8DO/XLDii8Uv/Pm6WKqDRj7JV3ZfuXIEfyuy5LXpIzAbB/1M4Ukp9GKNa7nA==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "libc": [
+        "glibc"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ]
+    },
+    "node_modules/@rollup/rollup-linux-x64-musl": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/@rollup/rollup-linux-x64-musl/-/rollup-linux-x64-musl-4.63.5.tgz",
+      "integrity": "sha512-VDC7rRJlee/scpki96GZ27Omf6yU87s1YXwVTpjE5841faVlDYYT565rgfmoR1U0sqL7z5ivQSDjcsF6VRXyBA==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "libc": [
+        "musl"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ]
+    },
+    "node_modules/@rollup/rollup-openbsd-x64": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/@rollup/rollup-openbsd-x64/-/rollup-openbsd-x64-4.63.5.tgz",
+      "integrity": "sha512-z86Ok2p4pTdv5xqCKZsTooO7yBEiaJR/HzU3Wx8RmWsPoLppnMKROhJusQob8B3IE1ghC343kUW9rC2r+Wf3ig==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "openbsd"
+      ]
+    },
+    "node_modules/@rollup/rollup-openharmony-arm64": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/@rollup/rollup-openharmony-arm64/-/rollup-openharmony-arm64-4.63.5.tgz",
+      "integrity": "sha512-IzQmj+xXwQFGhMAMKMQVXkMwMZN3TqkJgAE0nSsqvVwWWciP4AIPMmWRqOQ2GfX7TUDZr+xqGFcBS36CRPGw0g==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "openharmony"
+      ]
+    },
+    "node_modules/@rollup/rollup-win32-arm64-msvc": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/@rollup/rollup-win32-arm64-msvc/-/rollup-win32-arm64-msvc-4.63.5.tgz",
+      "integrity": "sha512-F6qpTaPc9bwBH85kjy0/BLmLSW1uv7AoOXCoRIkg2arlgCYlWYcAbiMkvZuAcaWk9TpCRG//okznLAqLGshkMw==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "win32"
+      ]
+    },
+    "node_modules/@rollup/rollup-win32-ia32-msvc": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/@rollup/rollup-win32-ia32-msvc/-/rollup-win32-ia32-msvc-4.63.5.tgz",
+      "integrity": "sha512-igoDsTFhhwECBeGbUuLeIk7t8Y1apa+cs6mDWpx2EZ0ch7oEQgzHbFUXN9euoHekCAQzXdXApAGkV6jznS7tWw==",
+      "cpu": [
+        "ia32"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "win32"
+      ]
+    },
+    "node_modules/@rollup/rollup-win32-x64-gnu": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/@rollup/rollup-win32-x64-gnu/-/rollup-win32-x64-gnu-4.63.5.tgz",
+      "integrity": "sha512-U3teMeMbXFmaM5D+OTJpsOXd+wV/qftIeYF9kBKL4v73641qyJmoXFtA28DQLsnmlyayEsTe72xpLHrArq6vHw==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "win32"
+      ]
+    },
+    "node_modules/@rollup/rollup-win32-x64-msvc": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/@rollup/rollup-win32-x64-msvc/-/rollup-win32-x64-msvc-4.63.5.tgz",
+      "integrity": "sha512-ypfC34F3RKXvCXBglGqGMsUSMKlgwd1HX9AOAlx9RoZZ6GaI42YHVeKpzg3JG+wpBUJYTG+NNZhqbDWL8tBZkw==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "win32"
+      ]
+    },
+    "node_modules/@types/babel__core": {
+      "version": "7.20.5",
+      "resolved": "https://registry.npmjs.org/@types/babel__core/-/babel__core-7.20.5.tgz",
+      "integrity": "sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/parser": "^7.20.7",
+        "@babel/types": "^7.20.7",
+        "@types/babel__generator": "*",
+        "@types/babel__template": "*",
+        "@types/babel__traverse": "*"
+      }
+    },
+    "node_modules/@types/babel__generator": {
+      "version": "7.27.0",
+      "resolved": "https://registry.npmjs.org/@types/babel__generator/-/babel__generator-7.27.0.tgz",
+      "integrity": "sha512-ufFd2Xi92OAVPYsy+P4n7/U7e68fex0+Ee8gSG9KX7eo084CWiQ4sdxktvdl0bOPupXtVJPY19zk6EwWqUQ8lg==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/types": "^7.0.0"
+      }
+    },
+    "node_modules/@types/babel__template": {
+      "version": "7.4.4",
+      "resolved": "https://registry.npmjs.org/@types/babel__template/-/babel__template-7.4.4.tgz",
+      "integrity": "sha512-h/NUaSyG5EyxBIp8YRxo4RMe2/qQgvyowRwVMzhYhBCONbW8PUsg4lkFMrhgZhUe5z3L3MiLDuvyJ/CaPa2A8A==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/parser": "^7.1.0",
+        "@babel/types": "^7.0.0"
+      }
+    },
+    "node_modules/@types/babel__traverse": {
+      "version": "7.28.0",
+      "resolved": "https://registry.npmjs.org/@types/babel__traverse/-/babel__traverse-7.28.0.tgz",
+      "integrity": "sha512-8PvcXf70gTDZBgt9ptxJ8elBeBjcLOAcOtoO/mPJjtji1+CdGbHgm77om1GrsPxsiE+uXIpNSK64UYaIwQXd4Q==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/types": "^7.28.2"
+      }
+    },
+    "node_modules/@types/estree": {
+      "version": "1.0.9",
+      "resolved": "https://registry.npmjs.org/@types/estree/-/estree-1.0.9.tgz",
+      "integrity": "sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/@types/prop-types": {
+      "version": "15.7.15",
+      "resolved": "https://registry.npmjs.org/@types/prop-types/-/prop-types-15.7.15.tgz",
+      "integrity": "sha512-F6bEyamV9jKGAFBEmlQnesRPGOQqS2+Uwi0Em15xenOxHaf2hv6L8YCVn3rPdPJOiJfPiCnLIRyvwVaqMY3MIw==",
+      "license": "MIT"
+    },
+    "node_modules/@types/react": {
+      "version": "18.3.31",
+      "resolved": "https://registry.npmjs.org/@types/react/-/react-18.3.31.tgz",
+      "integrity": "sha512-vfEqpXTvwT91yhmwdfouStN2hSKwTvyRs8qpLfADyrq/kxDw0hZM7Wk9Ug1FELj8hIby+S/+kQCSRFF32nv2Qw==",
+      "license": "MIT",
+      "dependencies": {
+        "@types/prop-types": "*",
+        "csstype": "^3.2.2"
+      }
+    },
+    "node_modules/@types/react-dom": {
+      "version": "18.3.7",
+      "resolved": "https://registry.npmjs.org/@types/react-dom/-/react-dom-18.3.7.tgz",
+      "integrity": "sha512-MEe3UeoENYVFXzoXEWsvcpg6ZvlrFNlOQ7EOsvhI3CfAXwzPfO8Qwuxd40nepsYKqyyVQnTdEfv68q91yLcKrQ==",
+      "dev": true,
+      "license": "MIT",
+      "peerDependencies": {
+        "@types/react": "^18.0.0"
+      }
+    },
+    "node_modules/@vitejs/plugin-react": {
+      "version": "4.7.0",
+      "resolved": "https://registry.npmjs.org/@vitejs/plugin-react/-/plugin-react-4.7.0.tgz",
+      "integrity": "sha512-gUu9hwfWvvEDBBmgtAowQCojwZmJ5mcLn3aufeCsitijs3+f2NsrPtlAWIR6OPiqljl96GVCUbLe0HyqIpVaoA==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/core": "^7.28.0",
+        "@babel/plugin-transform-react-jsx-self": "^7.27.1",
+        "@babel/plugin-transform-react-jsx-source": "^7.27.1",
+        "@rolldown/pluginutils": "1.0.0-beta.27",
+        "@types/babel__core": "^7.20.5",
+        "react-refresh": "^0.17.0"
+      },
+      "engines": {
+        "node": "^14.18.0 || >=16.0.0"
+      },
+      "peerDependencies": {
+        "vite": "^4.2.0 || ^5.0.0 || ^6.0.0 || ^7.0.0"
+      }
+    },
+    "node_modules/@vitest/expect": {
+      "version": "2.1.9",
+      "resolved": "https://registry.npmjs.org/@vitest/expect/-/expect-2.1.9.tgz",
+      "integrity": "sha512-UJCIkTBenHeKT1TTlKMJWy1laZewsRIzYighyYiJKZreqtdxSos/S1t+ktRMQWu2CKqaarrkeszJx1cgC5tGZw==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@vitest/spy": "2.1.9",
+        "@vitest/utils": "2.1.9",
+        "chai": "^5.1.2",
+        "tinyrainbow": "^1.2.0"
+      },
+      "funding": {
+        "url": "https://opencollective.com/vitest"
+      }
+    },
+    "node_modules/@vitest/mocker": {
+      "version": "2.1.9",
+      "resolved": "https://registry.npmjs.org/@vitest/mocker/-/mocker-2.1.9.tgz",
+      "integrity": "sha512-tVL6uJgoUdi6icpxmdrn5YNo3g3Dxv+IHJBr0GXHaEdTcw3F+cPKnsXFhli6nO+f/6SDKPHEK1UN+k+TQv0Ehg==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@vitest/spy": "2.1.9",
+        "estree-walker": "^3.0.3",
+        "magic-string": "^0.30.12"
+      },
+      "funding": {
+        "url": "https://opencollective.com/vitest"
+      },
+      "peerDependencies": {
+        "msw": "^2.4.9",
+        "vite": "^5.0.0"
+      },
+      "peerDependenciesMeta": {
+        "msw": {
+          "optional": true
+        },
+        "vite": {
+          "optional": true
+        }
+      }
+    },
+    "node_modules/@vitest/pretty-format": {
+      "version": "2.1.9",
+      "resolved": "https://registry.npmjs.org/@vitest/pretty-format/-/pretty-format-2.1.9.tgz",
+      "integrity": "sha512-KhRIdGV2U9HOUzxfiHmY8IFHTdqtOhIzCpd8WRdJiE7D/HUcZVD0EgQCVjm+Q9gkUXWgBvMmTtZgIG48wq7sOQ==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "tinyrainbow": "^1.2.0"
+      },
+      "funding": {
+        "url": "https://opencollective.com/vitest"
+      }
+    },
+    "node_modules/@vitest/runner": {
+      "version": "2.1.9",
+      "resolved": "https://registry.npmjs.org/@vitest/runner/-/runner-2.1.9.tgz",
+      "integrity": "sha512-ZXSSqTFIrzduD63btIfEyOmNcBmQvgOVsPNPe0jYtESiXkhd8u2erDLnMxmGrDCwHCCHE7hxwRDCT3pt0esT4g==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@vitest/utils": "2.1.9",
+        "pathe": "^1.1.2"
+      },
+      "funding": {
+        "url": "https://opencollective.com/vitest"
+      }
+    },
+    "node_modules/@vitest/snapshot": {
+      "version": "2.1.9",
+      "resolved": "https://registry.npmjs.org/@vitest/snapshot/-/snapshot-2.1.9.tgz",
+      "integrity": "sha512-oBO82rEjsxLNJincVhLhaxxZdEtV0EFHMK5Kmx5sJ6H9L183dHECjiefOAdnqpIgT5eZwT04PoggUnW88vOBNQ==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@vitest/pretty-format": "2.1.9",
+        "magic-string": "^0.30.12",
+        "pathe": "^1.1.2"
+      },
+      "funding": {
+        "url": "https://opencollective.com/vitest"
+      }
+    },
+    "node_modules/@vitest/spy": {
+      "version": "2.1.9",
+      "resolved": "https://registry.npmjs.org/@vitest/spy/-/spy-2.1.9.tgz",
+      "integrity": "sha512-E1B35FwzXXTs9FHNK6bDszs7mtydNi5MIfUWpceJ8Xbfb1gBMscAnwLbEu+B44ed6W3XjL9/ehLPHR1fkf1KLQ==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "tinyspy": "^3.0.2"
+      },
+      "funding": {
+        "url": "https://opencollective.com/vitest"
+      }
+    },
+    "node_modules/@vitest/utils": {
+      "version": "2.1.9",
+      "resolved": "https://registry.npmjs.org/@vitest/utils/-/utils-2.1.9.tgz",
+      "integrity": "sha512-v0psaMSkNJ3A2NMrUEHFRzJtDPFn+/VWZ5WxImB21T9fjucJRmS7xCS3ppEnARb9y11OAzaD+P2Ps+b+BGX5iQ==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@vitest/pretty-format": "2.1.9",
+        "loupe": "^3.1.2",
+        "tinyrainbow": "^1.2.0"
+      },
+      "funding": {
+        "url": "https://opencollective.com/vitest"
+      }
+    },
+    "node_modules/assertion-error": {
+      "version": "2.0.1",
+      "resolved": "https://registry.npmjs.org/assertion-error/-/assertion-error-2.0.1.tgz",
+      "integrity": "sha512-Izi8RQcffqCeNVgFigKli1ssklIbpHnCYc6AknXGYoB6grJqyeby7jv12JUQgmTAnIDnbck1uxksT4dzN3PWBA==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/baseline-browser-mapping": {
+      "version": "2.11.26",
+      "resolved": "https://registry.npmjs.org/baseline-browser-mapping/-/baseline-browser-mapping-2.11.26.tgz",
+      "integrity": "sha512-GLQdD3y6UF8iVuMJl5fHgE4jdn/ua7n+toKfLgNlg3BqQtOZjpy68T8Tup8/wGWZCDlm7KMg7tPb4MPn7oN0TQ==",
+      "dev": true,
+      "license": "Apache-2.0",
+      "bin": {
+        "baseline-browser-mapping": "dist/cli.cjs"
+      },
+      "engines": {
+        "node": ">=6.0.0"
+      }
+    },
+    "node_modules/browserslist": {
+      "version": "4.29.3",
+      "resolved": "https://registry.npmjs.org/browserslist/-/browserslist-4.29.3.tgz",
+      "integrity": "sha512-1R4kiYKXGViqEN0CnoDrXc1StD9niAwu+j2dukWzrD4bJgsD4lDmEp0CRbc6E/vYJIfTHwPmwyaKtVSudICdPA==",
+      "dev": true,
+      "funding": [
+        {
+          "type": "opencollective",
+          "url": "https://opencollective.com/browserslist"
+        },
+        {
+          "type": "tidelift",
+          "url": "https://tidelift.com/funding/github/npm/browserslist"
+        },
+        {
+          "type": "github",
+          "url": "https://github.com/sponsors/ai"
+        }
+      ],
+      "license": "MIT",
+      "dependencies": {
+        "baseline-browser-mapping": "^2.11.26",
+        "caniuse-lite": "^1.0.30001813",
+        "electron-to-chromium": "^1.5.439",
+        "node-releases": "^2.0.57",
+        "update-browserslist-db": "^1.3.3"
+      },
+      "bin": {
+        "browserslist": "cli.js"
+      },
+      "engines": {
+        "node": "^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7"
+      }
+    },
+    "node_modules/cac": {
+      "version": "6.7.14",
+      "resolved": "https://registry.npmjs.org/cac/-/cac-6.7.14.tgz",
+      "integrity": "sha512-b6Ilus+c3RrdDk+JhLKUAQfzzgLEPy6wcXqS7f/xe1EETvsDP6GORG7SFuOs6cID5YkqchW/LXZbX5bc8j7ZcQ==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=8"
+      }
+    },
+    "node_modules/caniuse-lite": {
+      "version": "1.0.30001814",
+      "resolved": "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001814.tgz",
+      "integrity": "sha512-/Uaf1lAzr59XcMpW0o96WoEfr+VXK2OX4U9AgFoiSHsVJ4HppnIFUjtYzsyDH2+tgANaQb2/oxYGwCPapN1FpA==",
+      "dev": true,
+      "funding": [
+        {
+          "type": "opencollective",
+          "url": "https://opencollective.com/browserslist"
+        },
+        {
+          "type": "tidelift",
+          "url": "https://tidelift.com/funding/github/npm/caniuse-lite"
+        },
+        {
+          "type": "github",
+          "url": "https://github.com/sponsors/ai"
+        }
+      ],
+      "license": "CC-BY-4.0"
+    },
+    "node_modules/chai": {
+      "version": "5.3.3",
+      "resolved": "https://registry.npmjs.org/chai/-/chai-5.3.3.tgz",
+      "integrity": "sha512-4zNhdJD/iOjSH0A05ea+Ke6MU5mmpQcbQsSOkgdaUMJ9zTlDTD/GYlwohmIE2u0gaxHYiVHEn1Fw9mZ/ktJWgw==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "assertion-error": "^2.0.1",
+        "check-error": "^2.1.1",
+        "deep-eql": "^5.0.1",
+        "loupe": "^3.1.0",
+        "pathval": "^2.0.0"
+      },
+      "engines": {
+        "node": ">=18"
+      }
+    },
+    "node_modules/check-error": {
+      "version": "2.1.3",
+      "resolved": "https://registry.npmjs.org/check-error/-/check-error-2.1.3.tgz",
+      "integrity": "sha512-PAJdDJusoxnwm1VwW07VWwUN1sl7smmC3OKggvndJFadxxDRyFJBX/ggnu/KE4kQAB7a3Dp8f/YXC1FlUprWmA==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">= 16"
+      }
+    },
+    "node_modules/convert-source-map": {
+      "version": "2.0.0",
+      "resolved": "https://registry.npmjs.org/convert-source-map/-/convert-source-map-2.0.0.tgz",
+      "integrity": "sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/csstype": {
+      "version": "3.2.3",
+      "resolved": "https://registry.npmjs.org/csstype/-/csstype-3.2.3.tgz",
+      "integrity": "sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==",
+      "license": "MIT"
+    },
+    "node_modules/debug": {
+      "version": "4.4.3",
+      "resolved": "https://registry.npmjs.org/debug/-/debug-4.4.3.tgz",
+      "integrity": "sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "ms": "^2.1.3"
+      },
+      "engines": {
+        "node": ">=6.0"
+      },
+      "peerDependenciesMeta": {
+        "supports-color": {
+          "optional": true
+        }
+      }
+    },
+    "node_modules/deep-eql": {
+      "version": "5.0.2",
+      "resolved": "https://registry.npmjs.org/deep-eql/-/deep-eql-5.0.2.tgz",
+      "integrity": "sha512-h5k/5U50IJJFpzfL6nO9jaaumfjO/f2NjK/oYB2Djzm4p9L+3T9qWpZqZ2hAbLPuuYq9wrU08WQyBTL5GbPk5Q==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=6"
+      }
+    },
+    "node_modules/dexie": {
+      "version": "4.4.6",
+      "resolved": "https://registry.npmjs.org/dexie/-/dexie-4.4.6.tgz",
+      "integrity": "sha512-hJP/BO6mjB+tX6hToIO1kmxYLNmun90wYbfcoAoLpKEyDYal/k33dg0TAfoUe2TDsbbLoVIzljJ3BN2UbR5EOg==",
+      "license": "Apache-2.0"
+    },
+    "node_modules/dexie-react-hooks": {
+      "version": "1.1.7",
+      "resolved": "https://registry.npmjs.org/dexie-react-hooks/-/dexie-react-hooks-1.1.7.tgz",
+      "integrity": "sha512-Lwv5W0Hk+uOW3kGnsU9GZoR1er1B7WQ5DSdonoNG+focTNeJbHW6vi6nBoX534VKI3/uwHebYzSw1fwY6a7mTw==",
+      "license": "Apache-2.0",
+      "peerDependencies": {
+        "@types/react": ">=16",
+        "dexie": "^3.2 || ^4.0.1-alpha",
+        "react": ">=16"
+      }
+    },
+    "node_modules/electron-to-chromium": {
+      "version": "1.5.443",
+      "resolved": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.5.443.tgz",
+      "integrity": "sha512-TDJG36L9A3CWWwZ97HKaE+Iz1sW80pNp6sAU0owzCIV3Zc9eVyRqZK8Vz6NKuMIU8WjP0pIkoqCa0VRf/yFD0Q==",
+      "dev": true,
+      "license": "ISC"
+    },
+    "node_modules/es-module-lexer": {
+      "version": "1.7.0",
+      "resolved": "https://registry.npmjs.org/es-module-lexer/-/es-module-lexer-1.7.0.tgz",
+      "integrity": "sha512-jEQoCwk8hyb2AZziIOLhDqpm5+2ww5uIE6lkO/6jcOCusfk6LhMHpXXfBLXTZ7Ydyt0j4VoUQv6uGNYbdW+kBA==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/esbuild": {
+      "version": "0.21.5",
+      "resolved": "https://registry.npmjs.org/esbuild/-/esbuild-0.21.5.tgz",
+      "integrity": "sha512-mg3OPMV4hXywwpoDxu3Qda5xCKQi+vCTZq8S9J/EpkhB2HzKXq4SNFZE3+NK93JYxc8VMSep+lOUSC/RVKaBqw==",
+      "dev": true,
+      "hasInstallScript": true,
+      "license": "MIT",
+      "bin": {
+        "esbuild": "bin/esbuild"
+      },
+      "engines": {
+        "node": ">=12"
+      },
+      "optionalDependencies": {
+        "@esbuild/aix-ppc64": "0.21.5",
+        "@esbuild/android-arm": "0.21.5",
+        "@esbuild/android-arm64": "0.21.5",
+        "@esbuild/android-x64": "0.21.5",
+        "@esbuild/darwin-arm64": "0.21.5",
+        "@esbuild/darwin-x64": "0.21.5",
+        "@esbuild/freebsd-arm64": "0.21.5",
+        "@esbuild/freebsd-x64": "0.21.5",
+        "@esbuild/linux-arm": "0.21.5",
+        "@esbuild/linux-arm64": "0.21.5",
+        "@esbuild/linux-ia32": "0.21.5",
+        "@esbuild/linux-loong64": "0.21.5",
+        "@esbuild/linux-mips64el": "0.21.5",
+        "@esbuild/linux-ppc64": "0.21.5",
+        "@esbuild/linux-riscv64": "0.21.5",
+        "@esbuild/linux-s390x": "0.21.5",
+        "@esbuild/linux-x64": "0.21.5",
+        "@esbuild/netbsd-x64": "0.21.5",
+        "@esbuild/openbsd-x64": "0.21.5",
+        "@esbuild/sunos-x64": "0.21.5",
+        "@esbuild/win32-arm64": "0.21.5",
+        "@esbuild/win32-ia32": "0.21.5",
+        "@esbuild/win32-x64": "0.21.5"
+      }
+    },
+    "node_modules/escalade": {
+      "version": "3.2.0",
+      "resolved": "https://registry.npmjs.org/escalade/-/escalade-3.2.0.tgz",
+      "integrity": "sha512-WUj2qlxaQtO4g6Pq5c29GTcWGDyd8itL8zTlipgECz3JesAiiOKotd8JU6otB3PACgG6xkJUyVhboMS+bje/jA==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=6"
+      }
+    },
+    "node_modules/estree-walker": {
+      "version": "3.0.3",
+      "resolved": "https://registry.npmjs.org/estree-walker/-/estree-walker-3.0.3.tgz",
+      "integrity": "sha512-7RUKfXgSMMkzt6ZuXmqapOurLGPPfgj6l9uRZ7lRGolvk0y2yocc35LdcxKC5PQZdn2DMqioAQ2NoWcrTKmm6g==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@types/estree": "^1.0.0"
+      }
+    },
+    "node_modules/expect-type": {
+      "version": "1.4.0",
+      "resolved": "https://registry.npmjs.org/expect-type/-/expect-type-1.4.0.tgz",
+      "integrity": "sha512-KfYbmpRm0VbLjEvVa9yGwCi9GI34xvi7A/HXYWQO65CSD2u3MczUJSuwXKFIxlGsgBQizV9q5J9NHj4VG0n+pA==",
+      "dev": true,
+      "license": "Apache-2.0",
+      "engines": {
+        "node": ">=12.0.0"
+      }
+    },
+    "node_modules/fsevents": {
+      "version": "2.3.3",
+      "resolved": "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz",
+      "integrity": "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==",
+      "dev": true,
+      "hasInstallScript": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "darwin"
+      ],
+      "engines": {
+        "node": "^8.16.0 || ^10.6.0 || >=11.0.0"
+      }
+    },
+    "node_modules/gensync": {
+      "version": "1.0.0-beta.2",
+      "resolved": "https://registry.npmjs.org/gensync/-/gensync-1.0.0-beta.2.tgz",
+      "integrity": "sha512-3hN7NaskYvMDLQY55gnW3NQ+mesEAepTqlg+VEbj7zzqEMBVNhzcGYYeqFo/TlYz6eQiFcp1HcsCZO+nGgS8zg==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/js-tokens": {
+      "version": "4.0.0",
+      "resolved": "https://registry.npmjs.org/js-tokens/-/js-tokens-4.0.0.tgz",
+      "integrity": "sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==",
+      "license": "MIT"
+    },
+    "node_modules/jsesc": {
+      "version": "3.1.0",
+      "resolved": "https://registry.npmjs.org/jsesc/-/jsesc-3.1.0.tgz",
+      "integrity": "sha512-/sM3dO2FOzXjKQhJuo0Q173wf2KOo8t4I8vHy6lF9poUp7bKT0/NHE8fPX23PwfhnykfqnC2xRxOnVw5XuGIaA==",
+      "dev": true,
+      "license": "MIT",
+      "bin": {
+        "jsesc": "bin/jsesc"
+      },
+      "engines": {
+        "node": ">=6"
+      }
+    },
+    "node_modules/json5": {
+      "version": "2.2.3",
+      "resolved": "https://registry.npmjs.org/json5/-/json5-2.2.3.tgz",
+      "integrity": "sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==",
+      "dev": true,
+      "license": "MIT",
+      "bin": {
+        "json5": "lib/cli.js"
+      },
+      "engines": {
+        "node": ">=6"
+      }
+    },
+    "node_modules/loose-envify": {
+      "version": "1.4.0",
+      "resolved": "https://registry.npmjs.org/loose-envify/-/loose-envify-1.4.0.tgz",
+      "integrity": "sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==",
+      "license": "MIT",
+      "dependencies": {
+        "js-tokens": "^3.0.0 || ^4.0.0"
+      },
+      "bin": {
+        "loose-envify": "cli.js"
+      }
+    },
+    "node_modules/loupe": {
+      "version": "3.2.1",
+      "resolved": "https://registry.npmjs.org/loupe/-/loupe-3.2.1.tgz",
+      "integrity": "sha512-CdzqowRJCeLU72bHvWqwRBBlLcMEtIvGrlvef74kMnV2AolS9Y8xUv1I0U/MNAWMhBlKIoyuEgoJ0t/bbwHbLQ==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/lru-cache": {
+      "version": "5.1.1",
+      "resolved": "https://registry.npmjs.org/lru-cache/-/lru-cache-5.1.1.tgz",
+      "integrity": "sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==",
+      "dev": true,
+      "license": "ISC",
+      "dependencies": {
+        "yallist": "^3.0.2"
+      }
+    },
+    "node_modules/magic-string": {
+      "version": "0.30.21",
+      "resolved": "https://registry.npmjs.org/magic-string/-/magic-string-0.30.21.tgz",
+      "integrity": "sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@jridgewell/sourcemap-codec": "^1.5.5"
+      }
+    },
+    "node_modules/ms": {
+      "version": "2.1.3",
+      "resolved": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz",
+      "integrity": "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/nanoid": {
+      "version": "3.3.19",
+      "resolved": "https://registry.npmjs.org/nanoid/-/nanoid-3.3.19.tgz",
+      "integrity": "sha512-Y2tUNy4ouw6tq5oDSKeQYGOyhkUBhNOcGV/02KC+6kd9eDGqdZd++mjMiIDilrBYvjEnCYvVtsuHCuP+okSfug==",
+      "dev": true,
+      "funding": [
+        {
+          "type": "github",
+          "url": "https://github.com/sponsors/ai"
+        }
+      ],
+      "license": "MIT",
+      "bin": {
+        "nanoid": "bin/nanoid.cjs"
+      },
+      "engines": {
+        "node": "^10 || ^12 || ^13.7 || ^14 || >=15.0.1"
+      }
+    },
+    "node_modules/node-releases": {
+      "version": "2.0.57",
+      "resolved": "https://registry.npmjs.org/node-releases/-/node-releases-2.0.57.tgz",
+      "integrity": "sha512-kQK9LGGFiHtrWiNhZtA7Qbw17AQz+dmsEKODRIVTXA9+e5MS/2gZEBhYJt13GrAz5/IOZKddH/0Z3TP/Zgo+yw==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=18"
+      }
+    },
+    "node_modules/pathe": {
+      "version": "1.1.2",
+      "resolved": "https://registry.npmjs.org/pathe/-/pathe-1.1.2.tgz",
+      "integrity": "sha512-whLdWMYL2TwI08hn8/ZqAbrVemu0LNaNNJZX73O6qaIdCTfXutsLhMkjdENX0qhsQ9uIimo4/aQOmXkoon2nDQ==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/pathval": {
+      "version": "2.0.1",
+      "resolved": "https://registry.npmjs.org/pathval/-/pathval-2.0.1.tgz",
+      "integrity": "sha512-//nshmD55c46FuFw26xV/xFAaB5HF9Xdap7HJBBnrKdAd6/GxDBaNA1870O79+9ueg61cZLSVc+OaFlfmObYVQ==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">= 14.16"
+      }
+    },
+    "node_modules/picocolors": {
+      "version": "1.1.1",
+      "resolved": "https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz",
+      "integrity": "sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==",
+      "dev": true,
+      "license": "ISC"
+    },
+    "node_modules/postcss": {
+      "version": "8.5.28",
+      "resolved": "https://registry.npmjs.org/postcss/-/postcss-8.5.28.tgz",
+      "integrity": "sha512-RRuzqDtt5Y9h3quz5hWhK+TPnsmVs6WwSU6LkJMeY4HstUEDuYTG8UJSdawMRzmzAtV+KEoG8N3Qg2qLy5vM/A==",
+      "dev": true,
+      "funding": [
+        {
+          "type": "opencollective",
+          "url": "https://opencollective.com/postcss/"
+        },
+        {
+          "type": "tidelift",
+          "url": "https://tidelift.com/funding/github/npm/postcss"
+        },
+        {
+          "type": "github",
+          "url": "https://github.com/sponsors/ai"
+        }
+      ],
+      "license": "MIT",
+      "dependencies": {
+        "nanoid": "^3.3.18",
+        "picocolors": "^1.1.1",
+        "source-map-js": "^1.2.1"
+      },
+      "engines": {
+        "node": "^10 || ^12 || >=14"
+      }
+    },
+    "node_modules/react": {
+      "version": "18.3.1",
+      "resolved": "https://registry.npmjs.org/react/-/react-18.3.1.tgz",
+      "integrity": "sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ==",
+      "license": "MIT",
+      "dependencies": {
+        "loose-envify": "^1.1.0"
+      },
+      "engines": {
+        "node": ">=0.10.0"
+      }
+    },
+    "node_modules/react-dom": {
+      "version": "18.3.1",
+      "resolved": "https://registry.npmjs.org/react-dom/-/react-dom-18.3.1.tgz",
+      "integrity": "sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw==",
+      "license": "MIT",
+      "dependencies": {
+        "loose-envify": "^1.1.0",
+        "scheduler": "^0.23.2"
+      },
+      "peerDependencies": {
+        "react": "^18.3.1"
+      }
+    },
+    "node_modules/react-refresh": {
+      "version": "0.17.0",
+      "resolved": "https://registry.npmjs.org/react-refresh/-/react-refresh-0.17.0.tgz",
+      "integrity": "sha512-z6F7K9bV85EfseRCp2bzrpyQ0Gkw1uLoCel9XBVWPg/TjRj94SkJzUTGfOa4bs7iJvBWtQG0Wq7wnI0syw3EBQ==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=0.10.0"
+      }
+    },
+    "node_modules/rollup": {
+      "version": "4.63.5",
+      "resolved": "https://registry.npmjs.org/rollup/-/rollup-4.63.5.tgz",
+      "integrity": "sha512-KRWwmNLlPw5M7HcdYfm15oBv9n9LPtjzpzCIxS/phwqvPyxHSoKX6Y2YU3pxSPfy0CLquVgsx/j/hBi6OvH1Nw==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@types/estree": "1.0.9"
+      },
+      "bin": {
+        "rollup": "dist/bin/rollup"
+      },
+      "engines": {
+        "node": ">=18.0.0",
+        "npm": ">=8.0.0"
+      },
+      "optionalDependencies": {
+        "@napi-rs/lzma-linux-x64-gnu": "1.5.1",
+        "@rollup/rollup-android-arm-eabi": "4.63.5",
+        "@rollup/rollup-android-arm64": "4.63.5",
+        "@rollup/rollup-darwin-arm64": "4.63.5",
+        "@rollup/rollup-darwin-x64": "4.63.5",
+        "@rollup/rollup-freebsd-arm64": "4.63.5",
+        "@rollup/rollup-freebsd-x64": "4.63.5",
+        "@rollup/rollup-linux-arm-gnueabihf": "4.63.5",
+        "@rollup/rollup-linux-arm-musleabihf": "4.63.5",
+        "@rollup/rollup-linux-arm64-gnu": "4.63.5",
+        "@rollup/rollup-linux-arm64-musl": "4.63.5",
+        "@rollup/rollup-linux-loong64-gnu": "4.63.5",
+        "@rollup/rollup-linux-loong64-musl": "4.63.5",
+        "@rollup/rollup-linux-ppc64-gnu": "4.63.5",
+        "@rollup/rollup-linux-ppc64-musl": "4.63.5",
+        "@rollup/rollup-linux-riscv64-gnu": "4.63.5",
+        "@rollup/rollup-linux-riscv64-musl": "4.63.5",
+        "@rollup/rollup-linux-s390x-gnu": "4.63.5",
+        "@rollup/rollup-linux-x64-gnu": "4.63.5",
+        "@rollup/rollup-linux-x64-musl": "4.63.5",
+        "@rollup/rollup-openbsd-x64": "4.63.5",
+        "@rollup/rollup-openharmony-arm64": "4.63.5",
+        "@rollup/rollup-win32-arm64-msvc": "4.63.5",
+        "@rollup/rollup-win32-ia32-msvc": "4.63.5",
+        "@rollup/rollup-win32-x64-gnu": "4.63.5",
+        "@rollup/rollup-win32-x64-msvc": "4.63.5",
+        "fsevents": "~2.3.2"
+      }
+    },
+    "node_modules/scheduler": {
+      "version": "0.23.2",
+      "resolved": "https://registry.npmjs.org/scheduler/-/scheduler-0.23.2.tgz",
+      "integrity": "sha512-UOShsPwz7NrMUqhR6t0hWjFduvOzbtv7toDH1/hIrfRNIDBnnBWd0CwJTGvTpngVlmwGCdP9/Zl/tVrDqcuYzQ==",
+      "license": "MIT",
+      "dependencies": {
+        "loose-envify": "^1.1.0"
+      }
+    },
+    "node_modules/semver": {
+      "version": "6.3.1",
+      "resolved": "https://registry.npmjs.org/semver/-/semver-6.3.1.tgz",
+      "integrity": "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==",
+      "dev": true,
+      "license": "ISC",
+      "bin": {
+        "semver": "bin/semver.js"
+      }
+    },
+    "node_modules/siginfo": {
+      "version": "2.0.0",
+      "resolved": "https://registry.npmjs.org/siginfo/-/siginfo-2.0.0.tgz",
+      "integrity": "sha512-ybx0WO1/8bSBLEWXZvEd7gMW3Sn3JFlW3TvX1nREbDLRNQNaeNN8WK0meBwPdAaOI7TtRRRJn/Es1zhrrCHu7g==",
+      "dev": true,
+      "license": "ISC"
+    },
+    "node_modules/source-map-js": {
+      "version": "1.2.2",
+      "resolved": "https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.2.tgz",
+      "integrity": "sha512-KGj/8Y43x35aZVDtt+J4mK1hoLGHULMYfSkODJNQjNDC3oW1PqPoxMwo0pLUsWM/UEGzON/NxeHywEfNXNP3Vw==",
+      "dev": true,
+      "license": "BSD-3-Clause",
+      "engines": {
+        "node": ">=0.10.0"
+      }
+    },
+    "node_modules/stackback": {
+      "version": "0.0.2",
+      "resolved": "https://registry.npmjs.org/stackback/-/stackback-0.0.2.tgz",
+      "integrity": "sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/std-env": {
+      "version": "3.10.0",
+      "resolved": "https://registry.npmjs.org/std-env/-/std-env-3.10.0.tgz",
+      "integrity": "sha512-5GS12FdOZNliM5mAOxFRg7Ir0pWz8MdpYm6AY6VPkGpbA7ZzmbzNcBJQ0GPvvyWgcY7QAhCgf9Uy89I03faLkg==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/tinybench": {
+      "version": "2.9.0",
+      "resolved": "https://registry.npmjs.org/tinybench/-/tinybench-2.9.0.tgz",
+      "integrity": "sha512-0+DUvqWMValLmha6lr4kD8iAMK1HzV0/aKnCtWb9v9641TnP/MFb7Pc2bxoxQjTXAErryXVgUOfv2YqNllqGeg==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/tinyexec": {
+      "version": "0.3.2",
+      "resolved": "https://registry.npmjs.org/tinyexec/-/tinyexec-0.3.2.tgz",
+      "integrity": "sha512-KQQR9yN7R5+OSwaK0XQoj22pwHoTlgYqmUscPYoknOoWCWfj/5/ABTMRi69FrKU5ffPVh5QcFikpWJI/P1ocHA==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/tinypool": {
+      "version": "1.1.1",
+      "resolved": "https://registry.npmjs.org/tinypool/-/tinypool-1.1.1.tgz",
+      "integrity": "sha512-Zba82s87IFq9A9XmjiX5uZA/ARWDrB03OHlq+Vw1fSdt0I+4/Kutwy8BP4Y/y/aORMo61FQ0vIb5j44vSo5Pkg==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": "^18.0.0 || >=20.0.0"
+      }
+    },
+    "node_modules/tinyrainbow": {
+      "version": "1.2.0",
+      "resolved": "https://registry.npmjs.org/tinyrainbow/-/tinyrainbow-1.2.0.tgz",
+      "integrity": "sha512-weEDEq7Z5eTHPDh4xjX789+fHfF+P8boiFB+0vbWzpbnbsEr/GRaohi/uMKxg8RZMXnl1ItAi/IUHWMsjDV7kQ==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=14.0.0"
+      }
+    },
+    "node_modules/tinyspy": {
+      "version": "3.0.2",
+      "resolved": "https://registry.npmjs.org/tinyspy/-/tinyspy-3.0.2.tgz",
+      "integrity": "sha512-n1cw8k1k0x4pgA2+9XrOkFydTerNcJ1zWCO5Nn9scWHTD+5tp8dghT2x1uduQePZTZgd3Tupf+x9BxJjeJi77Q==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=14.0.0"
+      }
+    },
+    "node_modules/typescript": {
+      "version": "5.9.3",
+      "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz",
+      "integrity": "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==",
+      "dev": true,
+      "license": "Apache-2.0",
+      "bin": {
+        "tsc": "bin/tsc",
+        "tsserver": "bin/tsserver"
+      },
+      "engines": {
+        "node": ">=14.17"
+      }
+    },
+    "node_modules/update-browserslist-db": {
+      "version": "1.3.3",
+      "resolved": "https://registry.npmjs.org/update-browserslist-db/-/update-browserslist-db-1.3.3.tgz",
+      "integrity": "sha512-pJ2sYawQS0R/WI928Gj5GlPhTGzbMelq0+4INtSYNDV9ErKJcX6xjGWkoG/VnB3dpUm00zALaqkrUD77pO5TDQ==",
+      "dev": true,
+      "funding": [
+        {
+          "type": "opencollective",
+          "url": "https://opencollective.com/browserslist"
+        },
+        {
+          "type": "tidelift",
+          "url": "https://tidelift.com/funding/github/npm/browserslist"
+        },
+        {
+          "type": "github",
+          "url": "https://github.com/sponsors/ai"
+        }
+      ],
+      "license": "MIT",
+      "dependencies": {
+        "escalade": "^3.2.0",
+        "picocolors": "^1.1.1"
+      },
+      "bin": {
+        "update-browserslist-db": "cli.js"
+      },
+      "peerDependencies": {
+        "browserslist": ">= 4.21.0"
+      }
+    },
+    "node_modules/vite": {
+      "version": "5.4.21",
+      "resolved": "https://registry.npmjs.org/vite/-/vite-5.4.21.tgz",
+      "integrity": "sha512-o5a9xKjbtuhY6Bi5S3+HvbRERmouabWbyUcpXXUA1u+GNUKoROi9byOJ8M0nHbHYHkYICiMlqxkg1KkYmm25Sw==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "esbuild": "^0.21.3",
+        "postcss": "^8.4.43",
+        "rollup": "^4.20.0"
+      },
+      "bin": {
+        "vite": "bin/vite.js"
+      },
+      "engines": {
+        "node": "^18.0.0 || >=20.0.0"
+      },
+      "funding": {
+        "url": "https://github.com/vitejs/vite?sponsor=1"
+      },
+      "optionalDependencies": {
+        "fsevents": "~2.3.3"
+      },
+      "peerDependencies": {
+        "@types/node": "^18.0.0 || >=20.0.0",
+        "less": "*",
+        "lightningcss": "^1.21.0",
+        "sass": "*",
+        "sass-embedded": "*",
+        "stylus": "*",
+        "sugarss": "*",
+        "terser": "^5.4.0"
+      },
+      "peerDependenciesMeta": {
+        "@types/node": {
+          "optional": true
+        },
+        "less": {
+          "optional": true
+        },
+        "lightningcss": {
+          "optional": true
+        },
+        "sass": {
+          "optional": true
+        },
+        "sass-embedded": {
+          "optional": true
+        },
+        "stylus": {
+          "optional": true
+        },
+        "sugarss": {
+          "optional": true
+        },
+        "terser": {
+          "optional": true
+        }
+      }
+    },
+    "node_modules/vite-node": {
+      "version": "2.1.9",
+      "resolved": "https://registry.npmjs.org/vite-node/-/vite-node-2.1.9.tgz",
+      "integrity": "sha512-AM9aQ/IPrW/6ENLQg3AGY4K1N2TGZdR5e4gu/MmmR2xR3Ll1+dib+nook92g4TV3PXVyeyxdWwtaCAiUL0hMxA==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "cac": "^6.7.14",
+        "debug": "^4.3.7",
+        "es-module-lexer": "^1.5.4",
+        "pathe": "^1.1.2",
+        "vite": "^5.0.0"
+      },
+      "bin": {
+        "vite-node": "vite-node.mjs"
+      },
+      "engines": {
+        "node": "^18.0.0 || >=20.0.0"
+      },
+      "funding": {
+        "url": "https://opencollective.com/vitest"
+      }
+    },
+    "node_modules/vitest": {
+      "version": "2.1.9",
+      "resolved": "https://registry.npmjs.org/vitest/-/vitest-2.1.9.tgz",
+      "integrity": "sha512-MSmPM9REYqDGBI8439mA4mWhV5sKmDlBKWIYbA3lRb2PTHACE0mgKwA8yQ2xq9vxDTuk4iPrECBAEW2aoFXY0Q==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@vitest/expect": "2.1.9",
+        "@vitest/mocker": "2.1.9",
+        "@vitest/pretty-format": "^2.1.9",
+        "@vitest/runner": "2.1.9",
+        "@vitest/snapshot": "2.1.9",
+        "@vitest/spy": "2.1.9",
+        "@vitest/utils": "2.1.9",
+        "chai": "^5.1.2",
+        "debug": "^4.3.7",
+        "expect-type": "^1.1.0",
+        "magic-string": "^0.30.12",
+        "pathe": "^1.1.2",
+        "std-env": "^3.8.0",
+        "tinybench": "^2.9.0",
+        "tinyexec": "^0.3.1",
+        "tinypool": "^1.0.1",
+        "tinyrainbow": "^1.2.0",
+        "vite": "^5.0.0",
+        "vite-node": "2.1.9",
+        "why-is-node-running": "^2.3.0"
+      },
+      "bin": {
+        "vitest": "vitest.mjs"
+      },
+      "engines": {
+        "node": "^18.0.0 || >=20.0.0"
+      },
+      "funding": {
+        "url": "https://opencollective.com/vitest"
+      },
+      "peerDependencies": {
+        "@edge-runtime/vm": "*",
+        "@types/node": "^18.0.0 || >=20.0.0",
+        "@vitest/browser": "2.1.9",
+        "@vitest/ui": "2.1.9",
+        "happy-dom": "*",
+        "jsdom": "*"
+      },
+      "peerDependenciesMeta": {
+        "@edge-runtime/vm": {
+          "optional": true
+        },
+        "@types/node": {
+          "optional": true
+        },
+        "@vitest/browser": {
+          "optional": true
+        },
+        "@vitest/ui": {
+          "optional": true
+        },
+        "happy-dom": {
+          "optional": true
+        },
+        "jsdom": {
+          "optional": true
+        }
+      }
+    },
+    "node_modules/why-is-node-running": {
+      "version": "2.3.0",
+      "resolved": "https://registry.npmjs.org/why-is-node-running/-/why-is-node-running-2.3.0.tgz",
+      "integrity": "sha512-hUrmaWBdVDcxvYqnyh09zunKzROWjbZTiNy8dBEjkS7ehEDQibXJ7XvlmtbwuTclUiIyN+CyXQD4Vmko8fNm8w==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "siginfo": "^2.0.0",
+        "stackback": "0.0.2"
+      },
+      "bin": {
+        "why-is-node-running": "cli.js"
+      },
+      "engines": {
+        "node": ">=8"
+      }
+    },
+    "node_modules/yallist": {
+      "version": "3.1.1",
+      "resolved": "https://registry.npmjs.org/yallist/-/yallist-3.1.1.tgz",
+      "integrity": "sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==",
+      "dev": true,
+      "license": "ISC"
+    }
+  }
+}
+
+==================== src\App.tsx ====================
+import { useEffect, useMemo, useState } from 'react';
+import Dashboard from './ui/Dashboard';
+import Finance from './ui/Finance';
+import Flip from './ui/Flip';
+import Settings from './ui/Settings';
+import { useData } from './hooks';
+import { fmtMinor } from './engine/utils';
+
+const NAV = [
+  { group: 'WORKSPACE', items: [{ id: 'dash', label: 'РћР±Р·РѕСЂ', icon: 'в–¦' }] },
+  { group: 'MONEY', items: [{ id: 'fin', label: 'РЎС‡РµС‚Р° Рё РѕРїРµСЂР°С†РёРё', icon: 'в—‰' }] },
+  { group: 'OPERATIONS', items: [{ id: 'flip', label: 'РњР°СЃС‚РµСЂСЃРєР°СЏ', icon: 'в–°' }] },
+  { group: 'SYSTEM', items: [{ id: 'set', label: 'РќР°СЃС‚СЂРѕР№РєРё', icon: 'вљ™' }] },
+] as const;
+type Section = (typeof NAV)[number]['items'][number]['id'];
+type SearchResult = { label: string; detail: string; section: Section };
+const TITLES: Record<Section, string> = {
+  dash: 'Р Р°Р±РѕС‡Р°СЏ СЃСЂРµРґР°', fin: 'РЎС‡РµС‚Р° Рё РѕРїРµСЂР°С†РёРё', flip: 'РњР°СЃС‚РµСЂСЃРєР°СЏ', set: 'РќР°СЃС‚СЂРѕР№РєРё СЃРёСЃС‚РµРјС‹',
+};
+
+export default function App() {
+  const [tab, setTab] = useState<Section>('dash');
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const d = useData();
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && (event.key.toLowerCase() === 'k' || event.code === 'Space')) {
+        event.preventDefault(); setSearchOpen(true);
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'n') {
+        event.preventDefault(); setTab('fin'); setMobileOpen(false);
+      }
+      if (event.key === 'Escape') { setSearchOpen(false); setMobileOpen(false); }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  const results = useMemo<SearchResult[]>(() => {
+    const pages: SearchResult[] = [
+      { label: 'РћР±Р·РѕСЂ', detail: 'Р Р°Р±РѕС‡Р°СЏ СЃСЂРµРґР°', section: 'dash' },
+      { label: 'РЎС‡РµС‚Р° Рё РѕРїРµСЂР°С†РёРё', detail: 'Р‘Р°Р»Р°РЅСЃ, РґРѕС…РѕРґС‹ Рё СЂР°СЃС…РѕРґС‹', section: 'fin' },
+      { label: 'РњР°СЃС‚РµСЂСЃРєР°СЏ', detail: 'РЎРєР»Р°Рґ Рё СЃР±РѕСЂРєРё', section: 'flip' },
+      { label: 'РќР°СЃС‚СЂРѕР№РєРё', detail: 'РџР°СЂР°РјРµС‚СЂС‹ Рё СЂРµР·РµСЂРІРЅС‹Рµ РєРѕРїРёРё', section: 'set' },
+      { label: 'Safe to Spend', detail: `Р”РѕСЃС‚СѓРїРЅРѕ ${fmtMinor(d.m.stsMinor)}`, section: 'dash' },
+      { label: 'BTC', detail: d.m.btcMinor ? fmtMinor(d.m.btcMinor) : 'РџРѕР·РёС†РёСЏ РЅРµ РЅР°СЃС‚СЂРѕРµРЅР°', section: 'set' },
+      ...d.accounts.map(account => ({ label: account.name, detail: `РЎС‡С‘С‚ В· ${fmtMinor(d.bal.get(account.id) ?? 0)}`, section: 'fin' as Section })),
+      ...d.cats.map(category => ({ label: category.name, detail: 'РљР°С‚РµРіРѕСЂРёСЏ РѕРїРµСЂР°С†РёР№', section: 'fin' as Section })),
+      ...[...d.txs].sort((a, b) => b.ts - a.ts).slice(0, 60).map<SearchResult>(tx => ({
+        label: tx.note || ({ INCOME: 'Р”РѕС…РѕРґ', EXPENSE: 'Р Р°СЃС…РѕРґ', TRANSFER: 'РџРµСЂРµРІРѕРґ', BUY_COMPONENTS: 'Р—Р°РєСѓРїРєР°',
+          ASSEMBLE: 'РЎР±РѕСЂРєР°', SELL_BUILD: 'РџСЂРѕРґР°Р¶Р°', DRAW: 'Р’С‹РІРѕРґ', ADJUST: 'РљРѕСЂСЂРµРєС‚РёСЂРѕРІРєР°' }[tx.type]),
+        detail: `${new Date(tx.ts).toLocaleDateString('ru-RU')} В· ${tx.categoryId ? d.cats.find(c => c.id === tx.categoryId)?.name ?? '' : tx.type}`,
+        section: tx.type === 'BUY_COMPONENTS' || tx.type === 'ASSEMBLE' || tx.type === 'SELL_BUILD' ? 'flip' : 'fin',
+      })),
+    ];
+    const normalized = query.trim().toLocaleLowerCase('ru');
+    return normalized ? pages.filter(item => `${item.label} ${item.detail}`.toLocaleLowerCase('ru').includes(normalized)).slice(0, 12) : pages.slice(0, 8);
+  }, [d.accounts, d.bal, d.cats, d.m.btcMinor, d.m.stsMinor, d.txs, query]);
+
+  const chooseSection = (section: Section) => { setTab(section); setMobileOpen(false); setSearchOpen(false); setQuery(''); };
+  const toggleSidebar = () => {
+    if (window.matchMedia('(max-width: 760px)').matches) setMobileOpen(value => !value);
+    else setCollapsed(value => !value);
+  };
+
+  return (
+    <div className={`app ${collapsed ? 'is-collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
+      <aside className="sidebar">
+        <div className="brand-lockup"><span className="brand-mark">C</span><span className="brand-name">CAPITAL OS<small>PERSONAL FINANCE</small></span></div>
+        <nav className="side-nav" aria-label="РћСЃРЅРѕРІРЅР°СЏ РЅР°РІРёРіР°С†РёСЏ">
+          {NAV.map(group => <div className="nav-group" key={group.group}>
+            <div className="nav-group-label">{group.group}</div>
+            {group.items.map(item => <button key={item.id} title={collapsed ? item.label : undefined}
+              className={`nav-item ${tab === item.id ? 'active' : ''}`} onClick={() => chooseSection(item.id)}>
+              <span className="nav-icon" aria-hidden="true">{item.icon}</span><span className="nav-label">{item.label}</span>
+            </button>)}
+          </div>)}
+        </nav>
+        <div className="sidebar-bottom"><span className="status-dot" /> Р›РѕРєР°Р»СЊРЅР°СЏ Р±Р°Р·Р° РґР°РЅРЅС‹С…</div>
+      </aside>
+      {mobileOpen && <button className="sidebar-scrim" aria-label="Р—Р°РєСЂС‹С‚СЊ РЅР°РІРёРіР°С†РёСЋ" onClick={() => setMobileOpen(false)} />}
+
+      <div className="workspace">
+        <header className="topbar">
+          <button className="icon-button menu-toggle" aria-label="РџРµСЂРµРєР»СЋС‡РёС‚СЊ Р±РѕРєРѕРІСѓСЋ РїР°РЅРµР»СЊ" title="Р‘РѕРєРѕРІР°СЏ РїР°РЅРµР»СЊ" onClick={toggleSidebar}>в°</button>
+          <div className="breadcrumb"><span>Capital OS</span><span className="breadcrumb-separator">/</span><strong>{TITLES[tab]}</strong></div>
+          <div className="topbar-actions">
+            <button className="search-trigger" onClick={() => setSearchOpen(true)}><span>вЊ•</span><span>РџРѕРёСЃРє Рё РєРѕРјР°РЅРґС‹</span><kbd>Ctrl K</kbd></button>
+            <span className="topbar-date">{new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+            <button className="icon-button settings-shortcut" title="РќР°СЃС‚СЂРѕР№РєРё" aria-label="РќР°СЃС‚СЂРѕР№РєРё" onClick={() => chooseSection('set')}>вљ™</button>
+          </div>
+        </header>
+        <main className="main-view">
+          <div className="page-heading"><div><div className="eyebrow">CAPITAL OS <span>/</span> {tab.toUpperCase()}</div><h1>{TITLES[tab]}</h1></div>
+            <button className="primary heading-action" onClick={() => chooseSection('fin')}><span aria-hidden="true">пј‹</span> РќРѕРІР°СЏ РѕРїРµСЂР°С†РёСЏ</button>
+          </div>
+          {tab === 'dash' && <Dashboard go={chooseSection} />}
+          {tab === 'fin' && <Finance />}
+          {tab === 'flip' && <Flip />}
+          {tab === 'set' && <Settings />}
+        </main>
+      </div>
+
+      {searchOpen && <div className="command-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setSearchOpen(false); }}>
+        <section className="command-dialog" role="dialog" aria-modal="true" aria-label="РџРѕРёСЃРє Capital OS">
+          <div className="command-input-row"><span className="command-search-icon">вЊ•</span>
+            <input autoFocus value={query} onChange={event => setQuery(event.target.value)} placeholder="РџРѕРёСЃРє РїРѕ Capital OS..." />
+            <kbd>ESC</kbd></div>
+          <div className="command-results">
+            {results.length ? results.map((item, index) => <button key={`${item.section}-${item.label}-${index}`} className="command-result"
+              onClick={() => chooseSection(item.section)}><span className="result-symbol">{item.section === 'fin' ? 'в—‰' : item.section === 'flip' ? 'в–°' : item.section === 'set' ? 'вљ™' : 'в–¦'}</span>
+              <span className="result-copy"><strong>{item.label}</strong><small>{item.detail}</small></span><span className="result-enter">в†µ</span></button>)
+              : <div className="empty-search">РќРёС‡РµРіРѕ РЅРµ РЅР°Р№РґРµРЅРѕ</div>}
+          </div>
+          <footer className="command-footer"><span>РџРµСЂРµС…РѕРґ Рє СЂР°Р·РґРµР»Сѓ РёР»Рё РґР°РЅРЅС‹Рј</span><span><kbd>Ctrl K</kbd> РѕС‚РєСЂС‹С‚СЊ РїРѕРёСЃРє</span></footer>
+        </section>
+      </div>}
+    </div>
+  );
+}
+
+==================== src\db.ts ====================
+import Dexie, { type Table } from 'dexie';
+import type { Account, Category, Tx, IncomeStream, Liability, Component, Build } from './types';
+
+export class DB extends Dexie {
+  accounts!: Table<Account, string>; categories!: Table<Category, string>; txs!: Table<Tx, string>;
+  streams!: Table<IncomeStream, string>; liabilities!: Table<Liability, string>;
+  components!: Table<Component, string>; builds!: Table<Build, string>;
+  kv!: Table<{ k: string; v: any }, string>;
+  constructor() {
+    super('capital-os');
+    this.version(1).stores({
+      accounts: 'id', categories: 'id',
+      txs: 'id, ts, type, buildId, categoryId',
+      streams: 'id', liabilities: 'id',
+      components: 'id, category, status, buildId',
+      builds: 'id, num, status', kv: 'k',
+    });
+  }
+}
+export const db = new DB();
+
+==================== src\engine\finance.ts ====================
+import { VIRT } from '../types';
+import type { Account, Tx, IncomeStream, Liability } from '../types';
+import { median, daysBetween, DIM, type Minor } from './utils';
+
+export function accountBalances(txs: Tx[]): Map<string, Minor> {
+  const m = new Map<string, Minor>();
+  for (const t of txs) for (const e of t.entries) m.set(e.acc, (m.get(e.acc) ?? 0) + e.amt);
+  return m;
+}
+export const checkTx = (t: Tx) => t.entries.reduce((s, e) => s + e.amt, 0) === 0;
+
+export interface Metrics {
+  liquidMinor: Minor; arrestedMinor: Minor; btcMinor: Minor; inventoryMinor: Minor; buildsMinor: Minor; totalMinor: Minor;
+  netWorthCfMinor: Minor; netWorthFullMinor: Minor;
+  minBurnMinor: Minor; normBurnMinor: Minor; runwayMinDays: number | null; runwayNormDays: number | null;
+  daysToIncome: number | null; nextIncomeTs: number | null;
+  essentialMinor: Minor; committedMinor: Minor; stsMinor: Minor; stsaveMinor: Minor; expectedFlowMinor: Minor;
+  savingsRate: number | null; bizRevenueMonth: Minor; bizProfitMonth: Minor; salesMonth: number;
+}
+
+export function nextGuaranteed(streams: IncomeStream[], now: number): number | null {
+  let best: number | null = null;
+  const today = new Date(now); today.setHours(0, 0, 0, 0);
+  for (const s of streams) {
+    if (s.reliability !== 'GUARANTEED') continue;
+    let t: number | null = null;
+    if (s.kind === 'MONTHLY' && s.day) {
+      for (let m = 0; m <= 1; m++) {
+        const y = today.getFullYear(), mo = today.getMonth() + m;
+        const dim = new Date(y, mo + 1, 0).getDate();
+        const d = new Date(y, mo, Math.min(s.day, dim)).getTime();
+        if (d >= today.getTime()) { t = d; break; }
+      }
+    } else if (s.kind === 'ONCE' && s.date) {
+      const d = new Date(s.date + 'T00:00:00').getTime();
+      if (d >= today.getTime()) t = d;
+    }
+    if (t != null && (best == null || t < best)) best = t;
+  }
+  return best;
+}
+
+function burnBuckets(txs: Tx[], mand: Set<string>, now: number) {
+  const M: number[] = [], O: number[] = [];
+  for (let i = 0; i < 3; i++) {
+    const from = now - (i + 1) * 30 * 86_400_000, to = now - i * 30 * 86_400_000;
+    let m = 0, o = 0;
+    for (const t of txs) {
+      if (t.type !== 'EXPENSE' || t.ts <= from || t.ts > to || t.buildId) continue;
+      const amt = t.entries.filter(e => !isV(e.acc)).reduce((s, e) => s - e.amt, 0);
+      if (amt <= 0) continue;
+      if (t.categoryId && mand.has(t.categoryId)) m += amt; else o += amt;
+    }
+    M.push(m); O.push(o);
+  }
+  return { M, O };
+}
+const isV = (id: string) => id.startsWith('virt:');
+
+export function computeFinance(inp: {
+  accounts: Account[]; txs: Tx[]; streams: IncomeStream[]; liabilities: Liability[];
+  mandatoryCats: Set<string>;
+  settings: { reserveMonths: number; expectedCoef: number; manualMinBurnMinor: Minor; btcSats: number; btcPriceRub: number };
+  now: number;
+}): Metrics {
+  const { accounts, txs, streams, liabilities, mandatoryCats, settings: S, now } = inp;
+  const bal = accountBalances(txs);
+
+  let liquid = 0, arrested = 0;
+  for (const a of accounts) {
+    const b = bal.get(a.id) ?? 0;
+    if (a.status === 'ARRESTED') { arrested += Math.max(0, b); continue; }
+    if (a.status === 'ACTIVE' && a.isLiquid) liquid += b;
+  }
+  const btcMinor = S.btcPriceRub > 0 ? Math.round((S.btcSats / 1e8) * S.btcPriceRub * 100) : 0;
+  const inventoryMinor = bal.get(VIRT.INVENTORY) ?? 0;
+  const buildsMinor = bal.get(VIRT.WIP) ?? 0;
+  const totalMinor = liquid + btcMinor + inventoryMinor + buildsMinor;
+
+  let liaA = 0, liaF = 0;
+  for (const l of liabilities) { liaF += l.principalMinor; if (l.activeInCashflow) liaA += l.principalMinor; }
+
+  const { M, O } = burnBuckets(txs, mandatoryCats, now);
+  const minBurn = Math.max(S.manualMinBurnMinor, Math.round(median(M)));
+  const normBurn = minBurn + Math.max(0, Math.round(median(O)));
+  const runwayMinDays = minBurn > 0 ? liquid / (minBurn / DIM) : null;
+  const runwayNormDays = normBurn > 0 ? liquid / (normBurn / DIM) : null;
+
+  const nextIncomeTs = nextGuaranteed(streams, now);
+  const daysToIncome = nextIncomeTs != null ? daysBetween(now, nextIncomeTs) : null;
+  const essentialMinor = daysToIncome != null ? Math.round((minBurn * daysToIncome) / DIM) : minBurn;
+
+  let committedMinor = 0;
+  for (const l of liabilities) {
+    if (!l.activeInCashflow || !l.monthlyMinor) continue;
+    committedMinor += countPay(l.day, now, nextIncomeTs) * l.monthlyMinor;
+  }
+  const stsMinor = Math.max(0, liquid - essentialMinor - committedMinor);
+  const stsaveMinor = Math.max(0, stsMinor - Math.round(minBurn * S.reserveMonths));
+
+  let expectedFlowMinor = 0;
+  for (const s of streams) if (s.reliability === 'EXPECTED') expectedFlowMinor += Math.round(s.amountMinor * s.coef);
+
+  // РјРµСЃСЏС†: Р»РёС‡РЅС‹Р№ SR + Р±РёР·РЅРµСЃ-РёС‚РѕРі (РёР· PNL-РїСЂРѕРІРѕРґРѕРє, Р±РµР· РґРІРѕР№РЅРѕРіРѕ СЃС‡С‘С‚Р°)
+  const start = new Date(now); start.setDate(1); start.setHours(0, 0, 0, 0);
+  const t0 = start.getTime();
+  let inc = 0, cons = 0, rev = 0, profit = 0, sales = 0;
+  for (const t of txs) {
+    if (t.ts < t0) continue;
+    if (t.type === 'INCOME') inc += t.entries.filter(e => !isV(e.acc)).reduce((s, e) => s + e.amt, 0);
+    if (t.type === 'EXPENSE' && !t.buildId) cons += t.entries.filter(e => !isV(e.acc)).reduce((s, e) => s - e.amt, 0);
+    if (t.type === 'SELL_BUILD') {
+      profit += -(t.entries.find(e => e.acc === VIRT.PNL)?.amt ?? 0);
+      rev += t.entries.filter(e => !isV(e.acc)).reduce((s, e) => s + e.amt, 0);
+      sales++;
+    }
+    if (t.type === 'EXPENSE' && t.buildId)
+      profit -= t.entries.filter(e => !isV(e.acc)).reduce((s, e) => s - e.amt, 0);
+  }
+
+  return { liquidMinor: liquid, arrestedMinor: arrested, btcMinor, inventoryMinor, buildsMinor, totalMinor,
+    netWorthCfMinor: totalMinor - liaA, netWorthFullMinor: totalMinor - liaF,
+    minBurnMinor: minBurn, normBurnMinor: normBurn, runwayMinDays, runwayNormDays,
+    daysToIncome, nextIncomeTs, essentialMinor, committedMinor, stsMinor, stsaveMinor, expectedFlowMinor,
+    savingsRate: inc > 0 ? (inc - cons) / inc : null,
+    bizRevenueMonth: rev, bizProfitMonth: profit, salesMonth: sales };
+}
+
+function countPay(day: number | undefined, now: number, until: number | null): number {
+  if (!day || until == null) return 1;
+  let c = 0; const n = new Date(now);
+  for (let m = 0; m <= 1; m++) {
+    const y = n.getFullYear(), mo = n.getMonth() + m;
+    const dim = new Date(y, mo + 1, 0).getDate();
+    const t = new Date(y, mo, Math.min(day, dim)).getTime();
+    if (t > now && t <= until) c++;
+  }
+  return c;
+}
+
+==================== src\engine\flip.ts ====================
+import type { Component, Build, Minor } from '../types';
+
+export interface Check { pair: string; level: 'OK' | 'WARN' | 'FAIL'; msg: string }
+export interface Parts { cpu?: any; mb?: any; gpu?: any; psu?: any; case_?: any; cooler?: any; ram: any[]; storage: any[] }
+type Rule = (p: Parts) => Check | Check[] | null;
+const C = (pair: string, level: Check['level'], msg: string): Check => ({ pair, level, msg });
+
+export const COMPAT_RULES: Rule[] = [
+  p => { if (!p.cpu || !p.mb) return null;
+    if (p.cpu.socket !== p.mb.socket) return C('CPUв†”MB', 'FAIL', `РЎРѕРєРµС‚ ${p.cpu.socket} в‰  ${p.mb.socket}`);
+    if (p.cpu.generation != null && p.mb.gens?.length && !p.mb.gens.includes(p.cpu.generation))
+      return C('CPUв†”MB', 'WARN', `РџРѕРєРѕР»РµРЅРёРµ ${p.cpu.generation} РЅРµ Р·Р°СЏРІР»РµРЅРѕ РїР»Р°С‚РѕР№ вЂ” РїСЂРѕРІРµСЂСЊ РїРѕРґРґРµСЂР¶РєСѓ BIOS`);
+    return C('CPUв†”MB', 'OK', 'РЎРѕРєРµС‚ Рё РїРѕРєРѕР»РµРЅРёРµ СЃРѕРІРјРµСЃС‚РёРјС‹'); },
+  p => { if (!p.mb || !p.ram.length) return null;
+    const bad = p.ram.find(r => r.type !== p.mb.ramType);
+    if (bad) return C('RAMв†”MB', 'FAIL', `${bad.type} РІ РїР»Р°С‚Сѓ СЃ ${p.mb.ramType} РЅРµ СѓСЃС‚Р°РЅРѕРІРёС‚СЊ`);
+    const mods = p.ram.reduce((s, r) => s + (r.moduleCount ?? 1), 0);
+    const gb = p.ram.reduce((s, r) => s + (r.moduleSizeGb ?? 0) * (r.moduleCount ?? 1), 0);
+    const out: Check[] = [];
+    if (p.mb.dimmSlots != null && mods > p.mb.dimmSlots) out.push(C('RAMв†”MB', 'FAIL', `РњРѕРґСѓР»РµР№ ${mods} > СЃР»РѕС‚РѕРІ ${p.mb.dimmSlots}`));
+    if (p.mb.maxRamGb != null && gb > p.mb.maxRamGb) out.push(C('RAMв†”MB', 'FAIL', `${gb} GB > РјР°РєСЃРёРјСѓРјР° РїР»Р°С‚С‹ ${p.mb.maxRamGb} GB`));
+    for (const r of p.ram) if (r.freqMhz && p.mb.maxMemFreq && r.freqMhz > p.mb.maxMemFreq)
+      out.push(C('RAMв†”MB', 'WARN', `${r.freqMhz} РњР“С† > ${p.mb.maxMemFreq} РњР“С† вЂ” Р±СѓРґРµС‚ РґР°СѓРЅРєР»РѕРє`));
+    if (!out.length) out.push(C('RAMв†”MB', 'OK', `РЎРѕРІРјРµСЃС‚РёРјРѕ: ${gb} GB ${p.mb.ramType}`));
+    return out; },
+  p => { if (!p.mb || !p.case_) return null;
+    return (p.case_.boards ?? []).includes(p.mb.formFactor)
+      ? C('MBв†”Case', 'OK', 'Р¤РѕСЂРј-С„Р°РєС‚РѕСЂ СЃРѕРІРјРµСЃС‚РёРј')
+      : C('MBв†”Case', 'FAIL', `${p.mb.formFactor} РЅРµ РїРѕРґРґРµСЂР¶РёРІР°РµС‚СЃСЏ РєРѕСЂРїСѓСЃРѕРј`); },
+  p => { if (!p.gpu || !p.psu) return null;
+    if (p.cpu?.tdp == null || p.gpu.tdp == null) return C('GPUв†”PSU', 'WARN', 'РќРµС‚ TDP РґР»СЏ СЂР°СЃС‡С‘С‚Р° РјРѕС‰РЅРѕСЃС‚Рё');
+    const req = Math.ceil((p.cpu.tdp + p.gpu.tdp + 75) * 1.2);
+    if (p.gpu.conns?.length && (p.psu.conns ?? []).filter((c: string) => c.startsWith('PCIe')).length < p.gpu.conns.length)
+      return C('GPUв†”PSU', 'FAIL', `GPU С‚СЂРµР±СѓРµС‚ ${p.gpu.conns.length} PCIe-СЂР°Р·СЉС‘РјРѕРІ, Сѓ Р‘Рџ РјРµРЅСЊС€Рµ`);
+    if (p.psu.watt < req) return C('GPUв†”PSU', 'FAIL', `Р‘Рџ ${p.psu.watt}W < СЂР°СЃС‡С‘С‚РЅС‹С… ${req}W (TDP+75Р’С‚, +20% Р·Р°РїР°СЃ)`);
+    if (p.psu.watt < Math.ceil(req * 1.1)) return C('GPUв†”PSU', 'WARN', `Р—Р°РїР°СЃ РјР°Р»: СЂРµРєРѕРјРµРЅРґРѕРІР°РЅРѕ в‰Ґ${Math.ceil(req * 1.1)}W`);
+    return C('GPUв†”PSU', 'OK', `РњРѕС‰РЅРѕСЃС‚Рё РґРѕСЃС‚Р°С‚РѕС‡РЅРѕ (РјРёРЅРёРјСѓРј ${req}W)`); },
+  p => { if (!p.gpu || !p.case_) return null;
+    if (p.gpu.lenMm != null && p.case_.gpuMm != null && p.gpu.lenMm > p.case_.gpuMm)
+      return C('GPUв†”Case', 'FAIL', `GPU ${p.gpu.lenMm} РјРј РЅРµ РїРѕРјРµС‰Р°РµС‚СЃСЏ (Р»РёРјРёС‚ ${p.case_.gpuMm} РјРј)`);
+    return C('GPUв†”Case', 'OK', 'Р”Р»РёРЅР° РІРёРґРµРѕРєР°СЂС‚С‹ РѕРє'); },
+  p => { if (!p.cooler || !p.cpu) return null;
+    if (!(p.cooler.sockets ?? []).includes(p.cpu.socket)) return C('Coolerв†”CPU', 'FAIL', `РљСѓР»РµСЂ РЅРµ РїРѕРґРґРµСЂР¶РёРІР°РµС‚ ${p.cpu.socket}`);
+    if (p.cpu.tdp != null && p.cooler.tdp != null && p.cooler.tdp < p.cpu.tdp)
+      return C('Coolerв†”CPU', 'WARN', 'TDP РєСѓР»РµСЂР° РЅРёР¶Рµ CPU вЂ” РІРѕР·РјРѕР¶РµРЅ С‚СЂРѕС‚С‚Р»РёРЅРі');
+    return C('Coolerв†”CPU', 'OK', 'РљСѓР»РµСЂ СЃРѕРІРјРµСЃС‚РёРј'); },
+  p => { if (!p.cooler || !p.case_) return null;
+    if (p.cooler.hMm != null && p.case_.coolerMm != null && p.cooler.hMm > p.case_.coolerMm)
+      return C('Coolerв†”Case', 'FAIL', `РљСѓР»РµСЂ ${p.cooler.hMm} РјРј РІС‹С€Рµ Р»РёРјРёС‚Р° РєРѕСЂРїСѓСЃР° ${p.case_.coolerMm} РјРј`);
+    return null; },
+  p => { if (!p.mb || !p.storage.length) return null;
+    let sata = 0; const m2 = { SATA: 0, NVME: 0 };
+    for (const s of p.storage) { if (s.iface === 'SATA') sata++; else m2[s.iface === 'M2_SATA' ? 'SATA' : 'NVME']++; }
+    const out: Check[] = [];
+    if (p.mb.sata != null && sata > p.mb.sata) out.push(C('Storageв†”MB', 'FAIL', `SATA-СѓСЃС‚СЂРѕР№СЃС‚РІ ${sata} > РїРѕСЂС‚РѕРІ ${p.mb.sata}`));
+    const slots = { SATA: p.mb.m2sata ?? 0, NVME: p.mb.m2nvme ?? 0 };
+    for (const k of ['SATA', 'NVME'] as const)
+      if (m2[k] > slots[k]) out.push(C('Storageв†”MB', 'FAIL', `M.2 ${k}: РЅСѓР¶РЅРѕ ${m2[k]}, РґРѕСЃС‚СѓРїРЅРѕ ${slots[k]}`));
+    if (!out.length) out.push(C('Storageв†”MB', 'OK', 'РџРѕСЂС‚РѕРІ РґРѕСЃС‚Р°С‚РѕС‡РЅРѕ'));
+    return out; },
+];
+
+export function checkCompat(p: Parts): Check[] {
+  const out: Check[] = [];
+  for (const r of COMPAT_RULES) { const res = r(p); if (res) out.push(...(Array.isArray(res) ? res : [res])); }
+  return out;
+}
+export const hasFail = (cs: Check[]) => cs.some(c => c.level === 'FAIL');
+
+/** GL-СЃРµР±РµСЃС‚РѕРёРјРѕСЃС‚СЊ (С‚РѕР»СЊРєРѕ РєРѕРјРїР»РµРєС‚СѓСЋС‰РёРµ вЂ” СЂРѕРІРЅРѕ С‚Рѕ, С‡С‚Рѕ Р»РµР¶РёС‚ РІ WIP) */
+export const compCost = (b: Build, byId: Map<string, Component>) =>
+  b.componentIds.reduce((s, id) => s + (byId.get(id)?.priceMinor ?? 0), 0);
+/** РџРѕР»РЅР°СЏ СЃРµР±РµСЃС‚РѕРёРјРѕСЃС‚СЊ РґР»СЏ ROI (GL + РґРѕРї.СЂР°СЃС…РѕРґС‹ СЃР±РѕСЂРєРё) */
+export const fullCost = (b: Build, byId: Map<string, Component>) => compCost(b, byId) + b.extras.reduce((s, e) => s + e.amt, 0);
+
+export function dealMetrics(cost: Minor, price: Minor, fee: Minor = 0) {
+  const profit = price - fee - cost;
+  return { profit, marginPct: price ? (profit / price) * 100 : 0, roiPct: cost ? (profit / cost) * 100 : 0 };
+}
+
+export function specLine(comps: Component[]): string {
+  const one = (k: string) => comps.find(c => c.category === k);
+  const ramGb = comps.filter(c => c.category === 'RAM')
+    .reduce((s, c) => s + (c.specs.moduleSizeGb ?? 0) * (c.specs.moduleCount ?? 1), 0);
+  const cpu = one('CPU'), gpu = one('GPU'), st = one('STORAGE');
+  return [cpu && `${cpu.brand} ${cpu.model}`, ramGb && `${ramGb} GB`,
+    gpu && `${gpu.brand} ${gpu.model}`, st && st.model].filter(Boolean).join(' / ') || 'вЂ”';
+}
+
+==================== src\engine\link.ts ====================
+import { VIRT } from '../types';
+import type { Tx, TxType, Minor } from '../types';
+import { uid } from './utils';
+
+const mk = (type: TxType, ts: number, entries: Tx['entries'], extra: Partial<Tx> = {}): Tx =>
+  ({ id: uid(), ts, type, entries, ...extra });
+
+// в”Ђв”Ђ Р»РёС‡РЅС‹Рµ РѕРїРµСЂР°С†РёРё в”Ђв”Ђ
+export const txIncome  = (ts: number, acc: string, amt: Minor, categoryId?: string, note?: string) =>
+  mk('INCOME', ts, [{ acc, amt }, { acc: VIRT.PNL, amt: -amt }], { categoryId, note });
+export const txExpense = (ts: number, acc: string, amt: Minor, categoryId?: string, note?: string, buildId?: string) =>
+  mk('EXPENSE', ts, [{ acc: VIRT.PNL, amt }, { acc, amt: -amt }], { categoryId, buildId, note });
+export const txTransfer = (ts: number, from: string, to: string, amt: Minor, note?: string) =>
+  mk('TRANSFER', ts, [{ acc: to, amt }, { acc: from, amt: -amt }], { note });
+export const txOpening = (ts: number, acc: string, amt: Minor) =>
+  mk('ADJUST', ts, [{ acc, amt }, { acc: VIRT.EQUITY, amt: -amt }], { note: 'Р’РІРѕРґ РѕСЃС‚Р°С‚РєР°' });
+
+// в”Ђв”Ђ РјРѕСЃС‚ FLIP в†’ FINANCE (РІС‹Р·С‹РІР°РµС‚СЃСЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё РёР· РјР°СЃС‚РµСЂСЃРєРѕР№) в”Ђв”Ђ
+export const txPurchase = (ts: number, acc: string, amt: Minor, note?: string) =>      // РґРµРЅСЊРіРё в†’ СЃРєР»Р°Рґ (РќР• СЂР°СЃС…РѕРґ)
+  mk('BUY_COMPONENTS', ts, [{ acc: VIRT.INVENTORY, amt }, { acc, amt: -amt }], { note });
+export const txAssemble = (ts: number, buildId: string, cost: Minor) =>                 // СЃРєР»Р°Рґ в†’ РЅРµР·Р°РІРµСЂС€С‘РЅРєР°
+  mk('ASSEMBLE', ts, [{ acc: VIRT.WIP, amt: cost }, { acc: VIRT.INVENTORY, amt: -cost }], { buildId });
+export const txUnassemble = (ts: number, buildId: string, cost: Minor) =>               // СЂР°Р·Р±РѕСЂРєР° РѕР±СЂР°С‚РЅРѕ
+  mk('ADJUST', ts, [{ acc: VIRT.INVENTORY, amt: cost }, { acc: VIRT.WIP, amt: -cost }], { buildId, note: 'Р Р°Р·Р±РѕСЂРєР° СЃР±РѕСЂРєРё' });
+export const txSell = (ts: number, buildId: string, cashAcc: string, price: Minor, compCost: Minor, fee: Minor = 0) =>
+  mk('SELL_BUILD', ts, [
+    { acc: cashAcc, amt: price - fee },          // РІС‹СЂСѓС‡РєР° РІ РєР°СЃСЃСѓ Р±РёР·РЅРµСЃР°
+    { acc: VIRT.WIP, amt: -compCost },           // СЃРїРёСЃР°РЅРёРµ СЃРµР±РµСЃС‚РѕРёРјРѕСЃС‚Рё
+    { acc: VIRT.PNL, amt: -(price - fee - compCost) } // РїСЂРёР±С‹Р»СЊ РїСЂРёР·РЅР°РЅР° Р·РґРµСЃСЊ Рё С‚РѕР»СЊРєРѕ Р·РґРµСЃСЊ
+  ], { buildId });
+export const txDraw = (ts: number, from: string, to: string, amt: Minor) =>             // Р±РёР·РЅРµСЃ в†’ Р»РёС‡РЅС‹Рµ
+  mk('DRAW', ts, [{ acc: to, amt }, { acc: from, amt: -amt }], { note: 'Р’С‹РІРѕРґ РёР· Р±РёР·РЅРµСЃР°' });
+
+==================== src\engine\utils.ts ====================
+export type Minor = number; // РєРѕРїРµР№РєРё, integer
+export const DAY = 86_400_000;
+export const DIM = 30.44;   // РґРЅРµР№ РІ РјРµСЃСЏС†Рµ
+
+export const uid = () => crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+export const todayISO = () => new Date().toISOString().slice(0, 10);
+export const toMinor = (rub: number) => Math.round(rub * 100);
+export const startOfDay = (t: number) => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); };
+export const daysBetween = (a: number, b: number) => Math.round((startOfDay(b) - startOfDay(a)) / DAY);
+
+export function median(xs: number[]): number {
+  if (!xs.length) return 0;
+  const s = [...xs].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m]! : (s[m - 1]! + s[m]!) / 2;
+}
+
+export function fmtMinor(m: Minor, cur = 'в‚Ѕ'): string {
+  const sign = m < 0 ? 'в€’' : '', abs = Math.abs(m);
+  const s = new Intl.NumberFormat('ru-RU').format(Math.floor(abs / 100));
+  const k = abs % 100;
+  return k ? `${sign}${s},${String(k).padStart(2, '0')} ${cur}` : `${sign}${s} ${cur}`;
+}
+export const fmtPct = (x: number, d = 1) => `${x.toFixed(d)}%`;
+export const fmtDays = (d: number | null) => (d == null ? 'вЂ”' : `${Math.floor(d)} РґРЅ`);
+
+==================== src\hooks.ts ====================
+import { useLiveQuery } from 'dexie-react-hooks';
+import { useMemo } from 'react';
+import { db } from './db';
+import { computeFinance, accountBalances } from './engine/finance';
+import { compCost, fullCost } from './engine/flip';
+import { toMinor } from './engine/utils';
+import { VIRT, type Build } from './types';
+
+export function useData() {
+  const accounts = useLiveQuery(() => db.accounts.toArray(), []) ?? [];
+  const cats = useLiveQuery(() => db.categories.toArray(), []) ?? [];
+  const txs = useLiveQuery(() => db.txs.toArray(), []) ?? [];
+  const streams = useLiveQuery(() => db.streams.toArray(), []) ?? [];
+  const lias = useLiveQuery(() => db.liabilities.toArray(), []) ?? [];
+  const comps = useLiveQuery(() => db.components.toArray(), []) ?? [];
+  const builds = useLiveQuery(() => db.builds.toArray(), []) ?? [];
+  const kv = useLiveQuery(() => db.kv.toArray(), []) ?? [];
+  const S = useMemo(() => Object.fromEntries(kv.map(r => [r.k, r.v])), [kv]);
+
+  const bal = useMemo(() => accountBalances(txs), [txs]);
+  const m = useMemo(() => computeFinance({
+    accounts, txs, streams, liabilities: lias,
+    mandatoryCats: new Set(cats.filter(c => c.mandatory).map(c => c.id)),
+    settings: { reserveMonths: S.reserveMonths ?? 1, expectedCoef: S.expectedCoef ?? 0.75,
+      manualMinBurnMinor: toMinor(S.manualMinBurn ?? 0), btcSats: S.btcSats ?? 0, btcPriceRub: S.btcPriceRub ?? 0 },
+    now: Date.now(),
+  }), [accounts, txs, streams, lias, cats, S]);
+
+  const compById = useMemo(() => new Map(comps.map(c => [c.id, c])), [comps]);
+  const cc = useMemo(() => (b: Build) => compCost(b, compById), [compById]);
+  const fc = useMemo(() => (b: Build) => fullCost(b, compById), [compById]);
+
+  // СЃРІРµСЂРєР° GL в†” СЃРєР»Р°РґР° (СЂР°СЃС…РѕР¶РґРµРЅРёРµ = РѕС€РёР±РєР° СѓС‡С‘С‚Р°, РїРѕРєР°Р·С‹РІР°РµРј Р±Р°РЅРЅРµСЂРѕРј)
+  const mismatch = useMemo(() => {
+    const stockVal = comps.filter(c => c.status === 'IN_STOCK').reduce((s, c) => s + c.priceMinor, 0);
+    const wipVal = builds.filter(b => b.status !== 'SOLD').reduce((s, b) => s + cc(b), 0);
+    return (bal.get(VIRT.INVENTORY) ?? 0) !== stockVal || (bal.get(VIRT.WIP) ?? 0) !== wipVal;
+  }, [bal, comps, builds, cc]);
+
+  return { accounts, cats, txs, streams, lias, comps, builds, S, bal, m, compById, cc, fc, mismatch };
+}
+
+==================== src\main.tsx ====================
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App';
+import './styles.css';
+import { db } from './db';
+import { seedDemo } from './seed';
+
+createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);
+navigator.storage?.persist?.().catch(() => {});
+db.on('ready', async () => {
+  const seeded = await db.kv.get('seeded');
+  if (!seeded && !(await db.accounts.count())) await seedDemo();
+});
+
+==================== src\seed.ts ====================
+import { db } from './db';
+import { txOpening, txExpense, txIncome, txPurchase, txAssemble } from './engine/link';
+import { toMinor, uid, DAY, todayISO } from './engine/utils';
+import type { Component } from './types';
+
+export async function seedDemo() {
+  const now = Date.now();
+  await db.accounts.bulkPut([
+    { id: 'acc-card', name: 'РљР°СЂС‚Р° (Р»РёС‡РЅР°СЏ)', kind: 'CARD', isLiquid: true, status: 'ACTIVE' },
+    { id: 'acc-cash', name: 'РќР°Р»РёС‡РЅС‹Рµ', kind: 'CASH', isLiquid: true, status: 'ACTIVE' },
+    { id: 'acc-box', name: 'РљР°СЃСЃР° Р±РёР·РЅРµСЃР°', kind: 'CASHBOX', isLiquid: false, status: 'ACTIVE' },
+    { id: 'acc-arr', name: 'РљР°СЂС‚Р° (Р°СЂРµСЃС‚РѕРІР°РЅР°)', kind: 'CARD', isLiquid: true, status: 'ARRESTED' },
+  ]);
+  await db.categories.bulkPut([
+    { id: 'c-home', name: 'Р–РёР»СЊС‘', mandatory: true }, { id: 'c-food', name: 'Р•РґР°', mandatory: true },
+    { id: 'c-tr', name: 'РўСЂР°РЅСЃРїРѕСЂС‚', mandatory: true }, { id: 'c-comm', name: 'РЎРІСЏР·СЊ', mandatory: true },
+    { id: 'c-fun', name: 'Р Р°Р·РІР»РµС‡РµРЅРёСЏ', mandatory: false }, { id: 'c-tech', name: 'РўРµС…РЅРёРєР°', mandatory: false },
+  ]);
+  const txs = [
+    txOpening(now - 45 * DAY, 'acc-card', toMinor(25000)), txOpening(now - 45 * DAY, 'acc-cash', toMinor(8000)),
+    txOpening(now - 45 * DAY, 'acc-arr', toMinor(12000)),
+  ];
+  for (let i = 1; i <= 3; i++) { // С‚СЂРё РјРµСЃСЏС†Р° РёСЃС‚РѕСЂРёРё РґР»СЏ burn
+    const d = (x: number) => now - i * 30 * DAY + x * DAY;
+    txs.push(txExpense(d(2), 'acc-card', toMinor(9000), 'c-home'), txExpense(d(6), 'acc-card', toMinor(6300), 'c-food'),
+      txExpense(d(10), 'acc-card', toMinor(1500), 'c-tr'), txExpense(d(12), 'acc-card', toMinor(700), 'c-comm'));
+  }
+  txs.push(txExpense(now - 4 * DAY, 'acc-card', toMinor(1800), 'c-fun'));
+  txs.push(txIncome(now - 12 * DAY, 'acc-card', toMinor(30000)));
+  txs.push(txPurchase(now - 6 * DAY, 'acc-card', toMinor(2500), 'РљРѕРјРїР»РµРєС‚ MB+CPU+RAM (РРІР°РЅ)'));
+  txs.push(txPurchase(now - 5 * DAY, 'acc-cash', toMinor(3300), 'HDD, Р‘Рџ, РєРѕСЂРїСѓСЃ, SSD (РђРІРёС‚Рѕ)'));
+  await db.txs.bulkPut(txs);
+
+  await db.streams.bulkPut([
+    { id: 's1', name: 'РћСЃРЅРѕРІРЅРѕР№ РґРѕС…РѕРґ', reliability: 'GUARANTEED', coef: 1, kind: 'MONTHLY', day: 15, amountMinor: toMinor(30000) },
+    { id: 's2', name: 'РџСЂРѕРґР°Р¶Рё РџРљ (РІРµСЂРѕСЏС‚РЅРѕ)', reliability: 'EXPECTED', coef: 0.75, kind: 'MONTHLY', day: 25, amountMinor: toMinor(10000) },
+  ]);
+  await db.liabilities.bulkPut([
+    { id: 'l1', name: 'Р”РѕР»Рі РјР°РјРµ', kind: 'PERSONAL', principalMinor: toMinor(6000),
+      status: 'ACTIVE', activeInCashflow: true, monthlyMinor: toMinor(2000), day: 20 },
+    { id: 'l2', name: 'РљСЂРµРґРёС‚ Р±Р°РЅРєР° X (РІ РїСЂРѕС†РµРґСѓСЂРµ)', kind: 'CREDIT', principalMinor: toMinor(350000),
+      status: 'LEGAL_FROZEN', activeInCashflow: false },
+  ]);
+  const C = (id: string, category: any, brand: string, model: string, price: number, specs: any): Component => ({
+    id, category, brand, model, condition: 'USED', priceMinor: toMinor(price), date: todayISO(),
+    status: 'IN_STOCK', specs });
+  const comps: Component[] = [
+    C('cp1', 'CPU', 'Intel', 'Core i3-6100', 1000, { socket: 'LGA1151', generation: 6, tdp: 51 }),
+    C('cm1', 'MB', 'MSI', 'H110M PRO-VD PLUS', 1000, { socket: 'LGA1151', formFactor: 'MICRO_ATX',
+      ramType: 'DDR4', maxRamGb: 32, dimmSlots: 2, maxMemFreq: 2133, sata: 4, gens: [6, 7] }),
+    C('cr1', 'RAM', 'Kingston', 'DDR4 2Г—4GB 2133', 500, { type: 'DDR4', moduleSizeGb: 4, moduleCount: 2, freqMhz: 2133 }),
+    C('ch1', 'STORAGE', 'WD', 'WD3200BPVT 320GB', 500, { kind: 'HDD', iface: 'SATA', gb: 320 }),
+    C('cs1', 'STORAGE', 'Kingston', 'A400 240GB', 800, { kind: 'SSD', iface: 'SATA', gb: 240 }),
+    C('cps1', 'PSU', 'FSP', 'ATX-450PNR 450W', 1200, { watt: 450, conns: ['ATX', 'EPS', 'PCIe6'] }),
+    C('cc1', 'CASE', 'Zalman', 'i3 NEO mATX', 800, { boards: ['MICRO_ATX', 'MINI_ITX'], gpuMm: 320, coolerMm: 160 }),
+  ];
+  await db.components.bulkPut(comps);
+  const buildId = uid();
+  await db.txs.add(txAssemble(now - 4 * DAY, buildId, toMinor(5800))); // 5 800 в‚Ѕ РІ WIP
+  await db.builds.add({ id: buildId, num: 1, status: 'FOR_SALE',
+    componentIds: comps.map(c => c.id), extras: [], targetPriceMinor: toMinor(9990), assembledAt: todayISO() });
+  await db.components.bulkPut(comps.map(c => ({ ...c, status: 'INSTALLED', buildId })));
+  await db.kv.bulkPut([
+    { k: 'reserveMonths', v: 1 }, { k: 'expectedCoef', v: 0.75 },
+    { k: 'manualMinBurn', v: 0 }, { k: 'btcSats', v: 0 }, { k: 'btcPriceRub', v: 0 },
+  ]);
+}
+
+==================== src\styles.css ====================
+:root {
+	color-scheme: dark;
+	--bg: #1b1e20;
+	--surface: #232629;
+	--elevated: #2b2f32;
+	--hover: #30353a;
+	--border: #3a3f44;
+	--fg: #eff0f1;
+	--secondary: #bdc3c7;
+	--mut: #899397;
+	--pri: #3daee9;
+	--positive: #67b26f;
+	--warning: #f0b44d;
+	--danger: #ed6a75;
+	--sidebar-width: 248px;
+}
+
+* { box-sizing: border-box; }
+html { min-width: 320px; background: var(--bg); }
+body {
+	min-width: 320px;
+	min-height: 100vh;
+	margin: 0;
+	background: radial-gradient(ellipse at 12% 0%, rgba(61, 174, 233, .045), transparent 34%), var(--bg);
+	color: var(--fg);
+	font: 14px/1.5 "Segoe UI", "Noto Sans", system-ui, sans-serif;
+	font-variant-numeric: tabular-nums;
+}
+button, input, select { font: inherit; }
+button { color: inherit; }
+button:focus-visible, input:focus-visible, select:focus-visible, .btn-file:focus-within {
+	outline: 2px solid var(--pri); outline-offset: 2px;
+}
+button:disabled { opacity: .45; cursor: not-allowed; }
+
+.app { min-height: 100vh; display: grid; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); transition: grid-template-columns .18s ease; }
+.app.is-collapsed { --sidebar-width: 72px; }
+.sidebar {
+	position: sticky; top: 0; z-index: 20; display: flex; flex-direction: column; height: 100vh;
+	padding: 20px 12px 12px; background: rgba(35, 38, 41, .96); border-right: 1px solid var(--border);
+}
+.brand-lockup { display: flex; align-items: center; gap: 11px; min-height: 42px; padding: 0 9px; overflow: hidden; }
+.brand-mark { display: grid; flex: 0 0 34px; width: 34px; height: 34px; place-items: center; border: 1px solid rgba(61,174,233,.46); border-radius: 7px; color: var(--pri); font-size: 18px; font-weight: 700; }
+.brand-name { color: var(--fg); font-size: 12px; font-weight: 700; letter-spacing: .08em; white-space: nowrap; }
+.brand-name small { display: block; margin-top: 2px; color: var(--mut); font-size: 9px; font-weight: 500; letter-spacing: .1em; }
+.sidebar-caption { margin: 32px 10px 14px; color: var(--mut); font-size: 10px; font-weight: 650; letter-spacing: .13em; }
+.side-nav { display: flex; flex-direction: column; gap: 14px; margin-top: 32px; padding: 0; border: 0; }
+.nav-group { display: grid; gap: 3px; }
+.nav-group-label { padding: 8px 10px 5px; color: #778185; font-size: 10px; font-weight: 650; letter-spacing: .11em; }
+.nav-item {
+	display: flex; width: 100%; min-height: 38px; align-items: center; gap: 12px; padding: 7px 10px;
+	overflow: hidden; border: 1px solid transparent; border-radius: 5px; background: transparent; color: var(--secondary);
+	text-align: left; cursor: pointer; transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.nav-item:hover { background: var(--hover); color: var(--fg); }
+.nav-item.active { border-color: rgba(61,174,233,.2); background: rgba(61,174,233,.12); color: #8dd2f5; }
+.nav-icon { display: grid; flex: 0 0 20px; width: 20px; place-items: center; color: var(--mut); font-size: 16px; }
+.nav-item.active .nav-icon { color: var(--pri); }
+.nav-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar-bottom { display: flex; align-items: center; gap: 8px; margin-top: auto; padding: 12px 10px 4px; border-top: 1px solid rgba(58,63,68,.7); color: var(--mut); font-size: 11px; white-space: nowrap; overflow: hidden; }
+.status-dot { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--positive); }
+.is-collapsed .brand-name, .is-collapsed .sidebar-caption, .is-collapsed .nav-group-label, .is-collapsed .nav-label, .is-collapsed .sidebar-bottom { display: none; }
+.is-collapsed .brand-lockup { justify-content: center; padding: 0; }
+.is-collapsed .side-nav { margin-top: 32px; }
+.is-collapsed .nav-item { justify-content: center; padding: 8px 4px; }
+.is-collapsed .nav-icon { font-size: 17px; }
+
+.workspace { min-width: 0; }
+.topbar { position: sticky; top: 0; z-index: 10; display: flex; height: 62px; align-items: center; gap: 18px; padding: 0 30px; border-bottom: 1px solid rgba(58,63,68,.78); background: rgba(27,30,32,.92); backdrop-filter: blur(12px); }
+.icon-button { display: inline-grid; width: 34px; height: 34px; flex: 0 0 34px; place-items: center; border: 1px solid transparent; border-radius: 5px; background: transparent; color: var(--secondary); cursor: pointer; }
+.icon-button:hover { border-color: var(--border); background: var(--hover); color: var(--fg); }
+.breadcrumb { display: flex; min-width: 0; align-items: center; gap: 9px; color: var(--mut); font-size: 13px; }
+.breadcrumb strong { overflow: hidden; color: var(--secondary); font-weight: 550; text-overflow: ellipsis; white-space: nowrap; }
+.breadcrumb-separator { color: #596267; }
+.topbar-actions { display: flex; align-items: center; gap: 15px; margin-left: auto; }
+.search-trigger { display: flex; width: min(280px, 29vw); min-width: 190px; align-items: center; gap: 9px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--mut); text-align: left; cursor: pointer; }
+.search-trigger:hover { border-color: #59646a; background: var(--elevated); color: var(--secondary); }
+.search-trigger > span:first-child { font-size: 19px; line-height: 1; }
+kbd { padding: 2px 5px; border: 1px solid var(--border); border-radius: 3px; background: #1d2022; color: var(--mut); font: 10px/1.4 inherit; white-space: nowrap; }
+.search-trigger kbd { margin-left: auto; }
+.topbar-date { color: var(--mut); font-size: 12px; white-space: nowrap; }
+.main-view { width: 100%; max-width: 1640px; margin: 0 auto; padding: 27px clamp(18px, 2.6vw, 42px) 48px; }
+.page-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+.page-heading h1 { margin: 3px 0 0; font-size: 23px; font-weight: 600; letter-spacing: 0; }
+.eyebrow { color: var(--mut); font-size: 10px; font-weight: 650; letter-spacing: .12em; }
+.eyebrow span { margin: 0 5px; color: #596267; }
+.heading-action { flex: 0 0 auto; }
+
+button { border: 1px solid var(--border); border-radius: 5px; background: var(--elevated); color: var(--fg); padding: 7px 11px; cursor: pointer; transition: background .14s ease, border-color .14s ease, color .14s ease; }
+button:hover { border-color: #59646a; background: var(--hover); }
+button.on, button.primary { border-color: #288dbf; background: #227ba6; color: #fff; }
+button.primary:hover, button.on:hover { border-color: #4eb8ea; background: #288dbf; }
+.btn-file { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: 5px; background: var(--elevated); color: var(--fg); padding: 7px 11px; cursor: pointer; }
+.card { margin-bottom: 14px; padding: 16px 18px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+.card h2 { margin: 0 0 12px; color: var(--secondary); font-size: 12px; font-weight: 650; letter-spacing: .07em; }
+.card h3 { margin: 10px 0 8px; color: var(--secondary); font-size: 13px; font-weight: 600; }
+.row { display: flex; justify-content: space-between; gap: 14px; padding: 6px 0; }
+.row > span { min-width: 0; color: var(--secondary); }
+.row b { text-align: right; font-weight: 600; }
+.row b.big { color: var(--fg); font-size: 20px; }
+.muted { color: var(--mut); }
+.hint { color: var(--mut); font-size: 12px; font-weight: 400; }
+hr { height: 1px; margin: 10px 0; border: 0; background: var(--border); }
+.tbl { width: 100%; margin: 10px 0; border-collapse: collapse; }
+.tbl td, .tbl th { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; }
+.tbl th { color: var(--mut); font-size: 11px; font-weight: 600; }
+.tbl tr:hover td { background: rgba(255,255,255,.018); }
+.warn { margin-bottom: 12px; padding: 10px 13px; border: 1px solid rgba(240,180,77,.38); border-radius: 5px; background: rgba(240,180,77,.09); color: #f3cc85; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.frm { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 9px 0; }
+input, select { max-width: 100%; min-height: 34px; padding: 6px 9px; border: 1px solid var(--border); border-radius: 5px; background: #1c1f21; color: var(--fg); }
+input::placeholder { color: #798388; }
+input[type="checkbox"] { min-height: auto; accent-color: var(--pri); }
+.ev { padding: 6px 0; color: var(--secondary); }
+
+.dashboard-toolbar { display: flex; min-height: 35px; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.dashboard-status { color: var(--mut); font-size: 12px; }
+.dashboard-toolbar-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.dashboard-toolbar button { min-height: 30px; padding: 5px 9px; font-size: 12px; }
+.dashboard-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); align-items: start; gap: 12px; }
+.widget { grid-column: span 4; min-width: 0; overflow: hidden; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+.widget-wide { grid-column: span 8; }
+.widget-inner { padding: 15px 16px 16px; }
+.widget-header { display: flex; min-height: 24px; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.widget-title { margin: 0; color: var(--secondary); font-size: 11px; font-weight: 650; letter-spacing: .08em; }
+.widget-kicker { margin-bottom: 2px; color: var(--mut); font-size: 9px; letter-spacing: .12em; }
+.widget-controls { display: flex; align-items: center; gap: 3px; }
+.widget-controls button { width: 26px; height: 26px; padding: 0; border-color: transparent; background: transparent; color: var(--mut); }
+.widget-controls button:hover { border-color: var(--border); background: var(--hover); color: var(--fg); }
+.metric-value { color: var(--fg); font-size: clamp(25px, 2vw, 34px); font-weight: 620; line-height: 1.2; }
+.metric-unit { margin-left: 5px; padding-right: 4px; color: var(--mut); font-size: 13px; font-weight: 500; }
+.metric-caption { margin-top: 5px; color: var(--mut); font-size: 12px; }
+.metric-delta { display: inline-flex; align-items: center; gap: 5px; margin-top: 7px; color: var(--positive); font-size: 12px; }
+.metric-delta.negative { color: var(--danger); }
+.capital-chart { width: 100%; height: 64px; margin-top: 12px; overflow: visible; }
+.capital-chart line { stroke: #42494e; stroke-width: .55; }
+.capital-chart polyline { fill: none; stroke: var(--pri); stroke-width: 1.6; vector-effect: non-scaling-stroke; }
+.chart-foot { display: flex; justify-content: space-between; color: var(--mut); font-size: 10px; }
+.chart-range { display: flex; gap: 2px; margin-top: 6px; }
+.chart-range button { min-width: 38px; padding: 4px 8px; border-color: transparent; background: transparent; color: var(--mut); font-size: 10px; }
+.chart-range button:hover { border-color: var(--border); background: var(--elevated); color: var(--fg); }
+.chart-range button.selected { border-color: var(--border); background: var(--elevated); color: var(--pri); }
+.safe-layout { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.safe-days { min-width: 78px; padding: 8px 10px; border-left: 1px solid var(--border); text-align: right; }
+.safe-days strong { display: block; color: var(--warning); font-size: 22px; line-height: 1.1; }
+.safe-days span { color: var(--mut); font-size: 10px; }
+.widget-detail { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); color: var(--mut); font-size: 11px; }
+.widget-detail strong { color: var(--secondary); font-weight: 550; text-align: right; }
+.flow-list { display: grid; gap: 10px; margin-top: 8px; }
+.flow-line { display: grid; grid-template-columns: minmax(104px, 1fr) minmax(80px, 2.2fr) minmax(85px, auto); align-items: center; gap: 10px; font-size: 12px; }
+.flow-label { display: flex; align-items: center; gap: 7px; color: var(--secondary); }
+.flow-dot { width: 7px; height: 7px; border-radius: 2px; background: var(--pri); }
+.flow-dot.expense { background: var(--warning); }
+.flow-dot.savings { background: var(--positive); }
+.flow-meter { height: 5px; overflow: hidden; border-radius: 4px; background: #383d40; }
+.flow-meter span { display: block; height: 100%; border-radius: inherit; background: var(--pri); }
+.flow-line.expenses .flow-meter span { background: var(--warning); }
+.flow-line.savings .flow-meter span { background: var(--positive); }
+.flow-line > b { text-align: right; font-weight: 550; }
+.flow-summary { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; padding-top: 11px; border-top: 1px solid var(--border); color: var(--mut); font-size: 11px; }
+.flow-summary strong { margin-left: 4px; color: var(--secondary); font-weight: 550; }
+.btc-price { color: var(--secondary); font-size: 12px; }
+.btc-position { margin-top: 10px; color: var(--fg); font-size: 21px; font-weight: 600; }
+.btc-position small { display: block; margin-top: 2px; color: var(--mut); font-size: 10px; font-weight: 400; }
+.btc-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.btc-stat { padding-top: 9px; border-top: 1px solid var(--border); }
+.btc-stat span { display: block; color: var(--mut); font-size: 10px; }
+.btc-stat strong { display: block; margin-top: 3px; color: var(--secondary); font-size: 13px; font-weight: 550; }
+.text-action { border: 0; background: transparent; color: var(--pri); padding: 0; font-size: 11px; }
+.text-action:hover { border: 0; background: transparent; color: #83d1f6; text-decoration: underline; }
+.scenario-wrap { margin-top: 12px; overflow-x: auto; }
+.scenario-table { width: 100%; border-collapse: collapse; font-size: 10px; white-space: nowrap; }
+.scenario-table td, .scenario-table th { padding: 5px 6px; border-top: 1px solid var(--border); text-align: right; }
+.scenario-table th:first-child, .scenario-table td:first-child { text-align: left; }
+.scenario-table th { color: var(--mut); font-weight: 550; }
+.recent-list { display: grid; }
+.recent-item { display: grid; grid-template-columns: 34px minmax(0,1fr) auto; align-items: center; gap: 10px; min-height: 47px; border-top: 1px solid rgba(58,63,68,.7); }
+.recent-sign { display: grid; width: 30px; height: 30px; place-items: center; border: 1px solid var(--border); border-radius: 5px; color: var(--secondary); font-size: 13px; }
+.recent-sign.income { color: var(--positive); }
+.recent-sign.expense { color: var(--warning); }
+.recent-copy { min-width: 0; }
+.recent-copy strong { display: block; overflow: hidden; color: var(--secondary); font-size: 12px; font-weight: 550; text-overflow: ellipsis; white-space: nowrap; }
+.recent-copy small { display: block; margin-top: 1px; color: var(--mut); font-size: 10px; }
+.recent-amount { color: var(--secondary); font-size: 12px; font-weight: 600; text-align: right; white-space: nowrap; }
+.recent-amount.income { color: var(--positive); }
+.recent-amount.expense { color: var(--secondary); }
+.widget-empty { padding: 10px 0; color: var(--mut); font-size: 12px; }
+.edit-notice { margin: 0 0 12px; padding: 8px 10px; border-left: 2px solid var(--pri); background: rgba(61,174,233,.07); color: var(--secondary); font-size: 12px; }
+
+.command-backdrop { position: fixed; inset: 0; z-index: 50; display: flex; justify-content: center; align-items: flex-start; padding: min(18vh, 150px) 16px 24px; background: rgba(7,9,10,.72); backdrop-filter: blur(3px); }
+.command-dialog { width: min(600px, 100%); overflow: hidden; border: 1px solid #4a5257; border-radius: 8px; background: var(--surface); box-shadow: 0 18px 60px rgba(0,0,0,.48); }
+.command-input-row { display: flex; align-items: center; gap: 11px; padding: 13px 16px; border-bottom: 1px solid var(--border); }
+.command-search-icon { color: var(--pri); font-size: 20px; }
+.command-input-row input { width: 100%; min-height: 32px; border: 0; outline: 0; background: transparent; font-size: 15px; }
+.command-results { max-height: min(52vh, 480px); overflow-y: auto; padding: 6px; }
+.command-result { display: flex; width: 100%; align-items: center; gap: 12px; padding: 9px 10px; border: 1px solid transparent; background: transparent; text-align: left; }
+.command-result:hover { border-color: var(--border); background: var(--elevated); }
+.result-symbol { display: grid; width: 30px; height: 30px; flex: 0 0 30px; place-items: center; border: 1px solid var(--border); border-radius: 5px; color: var(--pri); }
+.result-copy { display: grid; min-width: 0; gap: 1px; }
+.result-copy strong { overflow: hidden; font-size: 12px; font-weight: 550; text-overflow: ellipsis; white-space: nowrap; }
+.result-copy small { overflow: hidden; color: var(--mut); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.result-enter { margin-left: auto; color: var(--mut); }
+.command-footer { display: flex; justify-content: space-between; gap: 12px; padding: 9px 13px; border-top: 1px solid var(--border); color: var(--mut); font-size: 10px; }
+.command-footer kbd { margin-right: 5px; }
+.empty-search { padding: 24px 12px; color: var(--mut); text-align: center; }
+.sidebar-scrim { display: none; }
+
+@media (max-width: 900px) {
+	.widget { grid-column: span 6; }
+	.widget-wide { grid-column: span 12; }
+	.main-view { padding-right: 22px; padding-left: 22px; }
+}
+@media (max-width: 760px) {
+	.app, .app.is-collapsed { display: block; }
+	.sidebar { position: fixed; left: 0; width: min(280px, 84vw); transform: translateX(-102%); transition: transform .18s ease; box-shadow: 12px 0 30px rgba(0,0,0,.28); }
+	.mobile-open .sidebar { transform: translateX(0); }
+	.mobile-open .sidebar-scrim { position: fixed; inset: 0; z-index: 19; display: block; width: 100%; height: 100%; border: 0; border-radius: 0; background: rgba(0,0,0,.55); }
+	.is-collapsed .brand-name, .is-collapsed .sidebar-caption, .is-collapsed .nav-group-label, .is-collapsed .nav-label, .is-collapsed .sidebar-bottom { display: initial; }
+	.is-collapsed .brand-lockup { justify-content: flex-start; padding: 0 9px; }
+	.is-collapsed .side-nav { margin-top: 0; }
+	.is-collapsed .nav-item { justify-content: flex-start; padding: 7px 10px; }
+	.topbar { height: 56px; gap: 10px; padding: 0 14px; }
+	.breadcrumb > span:first-child, .breadcrumb-separator, .topbar-date, .settings-shortcut { display: none; }
+	.topbar-actions { gap: 7px; }
+	.search-trigger { width: 36px; min-width: 36px; justify-content: center; padding: 5px; }
+	.search-trigger > span:nth-child(2), .search-trigger kbd { display: none; }
+	.main-view { padding: 20px 14px 36px; }
+	.page-heading { align-items: center; margin-bottom: 17px; }
+	.page-heading h1 { font-size: 20px; }
+	.heading-action { padding: 7px 9px; font-size: 12px; }
+	.dashboard-grid { gap: 9px; }
+	.widget, .widget-wide { grid-column: span 12; }
+	.dashboard-toolbar { align-items: flex-start; }
+	.flow-line { grid-template-columns: minmax(80px, 1fr) minmax(50px, 1.2fr) minmax(72px, auto); gap: 7px; font-size: 11px; }
+	.tbl { display: block; overflow-x: auto; white-space: nowrap; }
+}
+@media (max-width: 430px) {
+	.page-heading { align-items: flex-end; }
+	.heading-action { width: 36px; height: 36px; overflow: hidden; padding: 0; font-size: 0; }
+	.heading-action span { font-size: 20px; }
+	.dashboard-toolbar { flex-direction: column; }
+	.widget-inner { padding: 13px; }
+	.card { padding: 13px; }
+	.safe-layout { align-items: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+	*, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+}
+
+==================== src\types.ts ====================
+import type { Minor } from './engine/utils';
+export type { Minor };
+
+// Р’РёСЂС‚СѓР°Р»СЊРЅС‹Рµ СЃС‡РµС‚Р° GL: РјР°СЃС‚РµСЂСЃРєР°СЏ Рё СЂРµР·СѓР»СЊС‚Р°С‚ Р¶РёРІСѓС‚ РІ РѕРґРЅРѕР№ РєРЅРёРіРµ СЃ Р»РёС‡РЅС‹РјРё РґРµРЅСЊРіР°РјРё
+export const VIRT = { EQUITY: 'virt:equity', PNL: 'virt:pnl', INVENTORY: 'virt:inventory', WIP: 'virt:wip' } as const;
+export const isVirt = (id: string) => id.startsWith('virt:');
+
+export interface Account { id: string; name: string; kind: 'CASH' | 'CARD' | 'SAVINGS' | 'CASHBOX';
+  isLiquid: boolean; status: 'ACTIVE' | 'ARRESTED' | 'CLOSED'; }
+export interface Category { id: string; name: string; mandatory: boolean; }
+
+export type TxType = 'INCOME' | 'EXPENSE' | 'TRANSFER' | 'BUY_COMPONENTS' | 'ASSEMBLE' | 'SELL_BUILD' | 'DRAW' | 'ADJUST';
+export interface Entry { acc: string; amt: Minor }               // + РїСЂРёС…РѕРґ РЅР° СЃС‡С‘С‚, в€’ СѓС…РѕРґ; ОЈ РїРѕ Tx = 0
+export interface Tx { id: string; ts: number; type: TxType; entries: Entry[];
+  categoryId?: string; buildId?: string; note?: string; }
+
+export type Reliability = 'GUARANTEED' | 'EXPECTED' | 'POSSIBLE';
+export interface IncomeStream { id: string; name: string; reliability: Reliability; coef: number;
+  kind: 'MONTHLY' | 'ONCE'; day?: number; date?: string; amountMinor: Minor; }
+
+export interface Liability { id: string; name: string; kind: string; principalMinor: Minor;
+  status: 'ACTIVE' | 'LEGAL_FROZEN'; activeInCashflow: boolean; monthlyMinor?: Minor; day?: number; }
+
+export type CompCat = 'CPU' | 'MB' | 'RAM' | 'GPU' | 'STORAGE' | 'PSU' | 'CASE' | 'COOLER';
+export interface Component { id: string; category: CompCat; brand: string; model: string;
+  condition: 'NEW' | 'USED' | 'REFURB' | 'UNKNOWN'; priceMinor: Minor; date: string; seller?: string;
+  status: 'IN_STOCK' | 'INSTALLED' | 'SOLD' | 'WRITTEN_OFF'; buildId?: string;
+  specs: Record<string, any>; note?: string; }
+
+export interface Build { id: string; num: number; status: 'ASSEMBLING' | 'FOR_SALE' | 'SOLD' | 'STALLED';
+  componentIds: string[]; extras: { name: string; amt: Minor }[];
+  targetPriceMinor?: Minor; assembledAt?: string; soldAt?: string; }
+
+==================== src\ui\Dashboard.tsx ====================
+import { useEffect, useState } from 'react';
+import { useData } from '../hooks';
+import { fmtMinor, fmtPct, fmtDays, toMinor, DIM, DAY } from '../engine/utils';
+import { dealMetrics } from '../engine/flip';
+import { VIRT, type Liability, type Tx } from '../types';
+import type { Metrics } from '../engine/finance';
+
+const WIDGETS = [
+  { id: 'capital', title: 'NET CAPITAL', kicker: 'РљРђРџРРўРђР›' },
+  { id: 'safe', title: 'SAFE TO SPEND', kicker: 'Р›РРљР’РР”РќРћРЎРўР¬' },
+  { id: 'flow', title: 'CAPITAL FLOW', kicker: 'Р”Р•РќР•Р–РќР«Р™ РџРћРўРћРљ' },
+  { id: 'btc', title: 'BTC POSITION', kicker: 'Р¦РР¤Р РћР’Р«Р• РђРљРўРР’Р«' },
+  { id: 'workshop', title: 'РњРђРЎРўР•Р РЎРљРђРЇ', kicker: 'РћРџР•Р РђР¦РР' },
+  { id: 'recent', title: 'РџРћРЎР›Р•Р”РќРР• РћРџР•Р РђР¦РР', kicker: 'Р–РЈР РќРђР›' },
+  { id: 'payments', title: 'Р‘Р›РР–РђР™РЁР•Р•', kicker: 'Р РђРЎРџРРЎРђРќРР•' },
+] as const;
+type WidgetId = (typeof WIDGETS)[number]['id'];
+type Layout = { widgets: WidgetId[]; wide: WidgetId[]; pinned: WidgetId[] };
+const DEFAULT_LAYOUT: Layout = {
+  widgets: ['capital', 'safe', 'flow', 'btc', 'workshop', 'recent', 'payments'],
+  wide: ['capital', 'flow', 'recent'],
+  pinned: [],
+};
+const LAYOUT_KEY = 'capital-os-dashboard-layout-v1';
+const CHART_RANGES = [{ label: '7D', days: 7 }, { label: '30D', days: 30 }, { label: '90D', days: 90 },
+  { label: '1Y', days: 365 }, { label: 'ALL', days: 0 }];
+
+function readLayout(): Layout {
+  try {
+    const saved = JSON.parse(localStorage.getItem(LAYOUT_KEY) ?? 'null');
+    if (!saved) return DEFAULT_LAYOUT;
+    const isWidget = (value: unknown): value is WidgetId => WIDGETS.some(widget => widget.id === value);
+    const uniqueWidgets = (values: unknown): WidgetId[] => Array.isArray(values)
+      ? [...new Set<WidgetId>((values as unknown[]).filter(isWidget))] : [];
+    const widgets = Array.isArray(saved.widgets) ? uniqueWidgets(saved.widgets) : DEFAULT_LAYOUT.widgets;
+    return {
+      widgets,
+      wide: Array.isArray(saved.wide) ? uniqueWidgets(saved.wide) : DEFAULT_LAYOUT.wide,
+      pinned: uniqueWidgets(saved.pinned),
+    };
+  } catch { return DEFAULT_LAYOUT; }
+}
+
+function capitalSeries(txs: Tx[], accounts: ReturnType<typeof useData>['accounts'], total: number, now: number, range: number) {
+  const tracked = new Set([...accounts.filter(account => account.status === 'ACTIVE' && account.isLiquid).map(account => account.id),
+    VIRT.INVENTORY, VIRT.WIP]);
+  const oldest = txs.reduce((min, tx) => Math.min(min, tx.ts), now);
+  const days = range || Math.max(1, Math.ceil((now - oldest) / DAY));
+  const count = range === 7 ? 8 : 32;
+  const start = now - days * DAY;
+  return Array.from({ length: count }, (_, index) => {
+    const at = start + (days * DAY * index) / (count - 1);
+    const deltaAfter = txs.filter(tx => tx.ts > at && tx.ts <= now)
+      .flatMap(tx => tx.entries).reduce((sum, entry) => sum + (tracked.has(entry.acc) ? entry.amt : 0), 0);
+    return { at, value: total - deltaAfter };
+  });
+}
+
+function nextPayment(liabilities: Liability[], now: number) {
+  const today = new Date(now); today.setHours(0, 0, 0, 0);
+  const candidates = liabilities.filter(item => item.activeInCashflow && item.day && item.monthlyMinor)
+    .map(item => {
+      const due = new Date(today.getFullYear(), today.getMonth(), item.day!);
+      if (due < today) due.setMonth(due.getMonth() + 1);
+      return { item, due };
+    }).sort((a, b) => a.due.getTime() - b.due.getTime());
+  const next = candidates[0];
+  return next ? { name: next.item.name, amount: next.item.monthlyMinor!, days: Math.max(0, Math.ceil((next.due.getTime() - today.getTime()) / DAY)), date: next.due } : null;
+}
+
+const TX_LABELS: Record<Tx['type'], string> = {
+  INCOME: 'Р”РѕС…РѕРґ', EXPENSE: 'Р Р°СЃС…РѕРґ', TRANSFER: 'РџРµСЂРµРІРѕРґ', BUY_COMPONENTS: 'Р—Р°РєСѓРїРєР°',
+  ASSEMBLE: 'РЎР±РѕСЂРєР°', SELL_BUILD: 'РџСЂРѕРґР°Р¶Р°', DRAW: 'Р’С‹РІРѕРґ', ADJUST: 'РљРѕСЂСЂРµРєС‚РёСЂРѕРІРєР°',
+};
+
+export default function Dashboard({ go }: { go: (t: any) => void }) {
+  const d = useData();
+  const m = d.m;
+  const [editing, setEditing] = useState(false);
+  const [layout, setLayout] = useState<Layout>(readLayout);
+  const [range, setRange] = useState(30);
+  const [showScenarios, setShowScenarios] = useState(false);
+  const now = Date.now();
+
+  useEffect(() => {
+    try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layout)); } catch {}
+  }, [layout]);
+
+  const forSale = d.builds.filter(build => build.status === 'FOR_SALE');
+  const potential = forSale.reduce((sum, build) => sum + dealMetrics(d.fc(build), build.targetPriceMinor ?? 0).profit, 0);
+  const series = capitalSeries(d.txs, d.accounts, m.totalMinor, now, range);
+  const chartMin = Math.min(...series.map(point => point.value));
+  const chartMax = Math.max(...series.map(point => point.value));
+  const chartRange = Math.max(1, chartMax - chartMin);
+  const points = series.map((point, index) => `${(index * 100) / (series.length - 1)},${34 - ((point.value - chartMin) / chartRange) * 29}`).join(' ');
+  const capitalChange = m.totalMinor - (series[0]?.value ?? m.totalMinor);
+  const capitalChangePct = series[0]?.value ? (capitalChange / Math.abs(series[0].value)) * 100 : 0;
+  const due = nextPayment(d.lias, now);
+  const monthStart = new Date(now); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
+  let monthIncome = 0, monthExpenses = 0;
+  for (const tx of d.txs) {
+    if (tx.ts < monthStart.getTime()) continue;
+    if (tx.type === 'INCOME') monthIncome += tx.entries.filter(entry => !entry.acc.startsWith('virt:') && entry.amt > 0).reduce((sum, entry) => sum + entry.amt, 0);
+    if (tx.type === 'EXPENSE' && !tx.buildId) monthExpenses += tx.entries.filter(entry => !entry.acc.startsWith('virt:') && entry.amt < 0).reduce((sum, entry) => sum - entry.amt, 0);
+  }
+  const availableWidgets = WIDGETS.filter(widget => !layout.widgets.includes(widget.id));
+
+  if (!d.accounts.length) return (
+    <div className="card"><h2>РќР°С‡Р°Р»Рѕ СЂР°Р±РѕС‚С‹</h2>
+      <p className="muted">Р‘Р°Р·Р° РїРѕРєР° РїСѓСЃС‚Р°. РњРѕР¶РЅРѕ РІРЅРµСЃС‚Рё СЃРІРѕРё СЃС‡РµС‚Р° РёР»Рё РІРµСЂРЅСѓС‚СЊ РґРµРјРѕ-РґР°РЅРЅС‹Рµ РІ РЅР°СЃС‚СЂРѕР№РєР°С….</p>
+      <button className="primary" onClick={() => go('set')}>РћС‚РєСЂС‹С‚СЊ РЅР°СЃС‚СЂРѕР№РєРё</button>
+    </div>);
+
+  const moveWidget = (id: WidgetId, direction: -1 | 1) => setLayout(current => {
+    const index = current.widgets.indexOf(id), target = index + direction;
+    if (target < 0 || target >= current.widgets.length || current.pinned.includes(id) !== current.pinned.includes(current.widgets[target]!)) return current;
+    const widgets = [...current.widgets];
+    [widgets[index], widgets[target]] = [widgets[target]!, widgets[index]!];
+    return { ...current, widgets };
+  });
+
+  const togglePin = (id: WidgetId) => setLayout(current => {
+    const pinned = current.pinned.includes(id) ? current.pinned.filter(item => item !== id) : [...current.pinned, id];
+    const widgets = [...pinned.filter(item => current.widgets.includes(item)), ...current.widgets.filter(item => !pinned.includes(item))];
+    return { ...current, pinned, widgets };
+  });
+
+  const renderWidget = (id: WidgetId) => {
+    if (id === 'capital') return <>
+      <div className="metric-value">{fmtMinor(m.totalMinor)}</div>
+      <div className={`metric-delta ${capitalChange < 0 ? 'negative' : ''}`}>
+        <span>{capitalChange >= 0 ? 'в†—' : 'в†'}</span>{capitalChange >= 0 ? '+' : ''}{fmtMinor(capitalChange)} В· {fmtPct(capitalChangePct)} В· {range ? `${range} DAYS` : 'ALL TIME'}
+      </div>
+      <svg className="capital-chart" viewBox="0 0 100 40" preserveAspectRatio="none" role="img" aria-label="РСЃС‚РѕСЂРёСЏ РєР°РїРёС‚Р°Р»Р°">
+        <line x1="0" y1="34.5" x2="100" y2="34.5" /><polyline points={points} />
+      </svg>
+      <div className="chart-foot"><span>{range ? `${range} РґРЅРµР№ РЅР°Р·Р°Рґ` : 'РќР°С‡Р°Р»Рѕ СѓС‡С‘С‚Р°'}</span><span>РЎР•Р™Р§РђРЎ</span></div>
+      <div className="chart-range" aria-label="РџРµСЂРёРѕРґ РіСЂР°С„РёРєР°">
+        {CHART_RANGES.map(item => <button key={item.label} className={range === item.days ? 'selected' : ''} onClick={() => setRange(item.days)}>{item.label}</button>)}
+      </div>
+      <div className="widget-detail"><span>Р›РёРєРІРёРґРЅРѕСЃС‚СЊ</span><strong>{fmtMinor(m.liquidMinor)}</strong></div>
+      <div className="widget-detail"><span>Net worth В· РїРѕР»РЅС‹Р№</span><strong>{fmtMinor(m.netWorthFullMinor)}</strong></div>
+    </>;
+
+    if (id === 'safe') return <>
+      <div className="safe-layout"><div><div className="metric-value">{fmtMinor(m.stsMinor)}</div><div className="metric-caption">Р”РѕСЃС‚СѓРїРЅРѕ Р±РµР· СѓС‡С‘С‚Р° РѕР¶РёРґР°РµРјС‹С… РґРѕС…РѕРґРѕРІ</div></div>
+        <div className="safe-days"><strong>{fmtDays(m.daysToIncome)}</strong><span>РґРѕ РґРѕС…РѕРґР°</span></div></div>
+      <div className="widget-detail"><span>РЎР»РµРґСѓСЋС‰РёР№ РѕР±СЏР·Р°С‚РµР»СЊРЅС‹Р№ РїР»Р°С‚С‘Р¶</span><strong>{due ? fmtMinor(due.amount) : 'РќРµС‚ РІ СЂР°СЃРїРёСЃР°РЅРёРё'}</strong></div>
+      {due && <div className="widget-detail"><span>{due.name}</span><strong>{due.date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })} В· С‡РµСЂРµР· {due.days} РґРЅ.</strong></div>}
+      <button className="text-action" onClick={() => go('fin')}>Р Р°СЃС‡С‘С‚ Рё СЃС‡РµС‚Р° в†’</button>
+    </>;
+
+    if (id === 'flow') {
+      const max = Math.max(monthIncome, monthExpenses, m.minBurnMinor, 1);
+      const rows = [
+        { label: 'Р”РѕС…РѕРґ', amount: monthIncome, kind: 'income', percent: monthIncome / max * 100 },
+        { label: 'Р Р°СЃС…РѕРґС‹', amount: monthExpenses, kind: 'expenses', percent: monthExpenses / max * 100 },
+        { label: 'РњРёРЅ. СЂР°СЃС…РѕРґС‹', amount: m.minBurnMinor, kind: 'expenses', percent: m.minBurnMinor / max * 100 },
+        { label: 'РћСЃС‚Р°С‚РѕРє', amount: monthIncome - monthExpenses, kind: 'savings', percent: Math.max(0, monthIncome - monthExpenses) / max * 100 },
+      ];
+      return <>
+        <div className="flow-list">{rows.map(row => <div className={`flow-line ${row.kind}`} key={row.label}>
+          <span className="flow-label"><i className={`flow-dot ${row.kind === 'expenses' ? 'expense' : row.kind === 'savings' ? 'savings' : ''}`} />{row.label}</span>
+          <div className="flow-meter"><span style={{ width: `${Math.max(0, Math.min(100, row.percent))}%` }} /></div>
+          <b>{fmtMinor(row.amount)}</b>
+        </div>)}</div>
+        <div className="flow-summary"><span>РџСЂРёР±С‹Р»СЊ РјР°СЃС‚РµСЂСЃРєРѕР№ <strong>{fmtMinor(m.bizProfitMonth)}</strong></span>
+          <span>РќРѕСЂРјР° СЃР±РµСЂРµР¶РµРЅРёР№ <strong>{m.savingsRate == null ? 'вЂ”' : fmtPct(m.savingsRate * 100)}</strong></span></div>
+      </>;
+    }
+
+    if (id === 'btc') {
+      const sats = Number(d.S.btcSats ?? 0), price = Number(d.S.btcPriceRub ?? 0);
+      const allocation = m.totalMinor > 0 ? (m.btcMinor / m.totalMinor) * 100 : 0;
+      return <>
+        <div className="btc-price">Р С‹РЅРѕС‡РЅР°СЏ С†РµРЅР° В· {price > 0 ? fmtMinor(toMinor(price)) : 'РЅРµ Р·Р°РґР°РЅР°'}</div>
+        <div className="btc-position">{(sats / 1e8).toFixed(8)} BTC<small>РўРµРєСѓС‰Р°СЏ РїРѕР·РёС†РёСЏ</small></div>
+        <div className="btc-stat-grid"><div className="btc-stat"><span>РЎС‚РѕРёРјРѕСЃС‚СЊ</span><strong>{m.btcMinor ? fmtMinor(m.btcMinor) : 'вЂ”'}</strong></div>
+          <div className="btc-stat"><span>Р”РѕР»СЏ РєР°РїРёС‚Р°Р»Р°</span><strong>{m.btcMinor ? fmtPct(allocation) : 'вЂ”'}</strong></div></div>
+        <div className="widget-detail"><span>P/L</span><strong>вЂ” В· СЃРµР±РµСЃС‚РѕРёРјРѕСЃС‚СЊ РЅРµ Р·Р°РґР°РЅР°</strong></div>
+        <button className="text-action" onClick={() => setShowScenarios(value => !value)}>{showScenarios ? 'РЎРєСЂС‹С‚СЊ СЃС†РµРЅР°СЂРёРё в†‘' : 'Р Р°Р·Р±РѕСЂ СЃС†РµРЅР°СЂРёРµРІ в†’'}</button>
+        {showScenarios && <div className="scenario-wrap"><table className="scenario-table"><thead><tr><th>РЎС†РµРЅР°СЂРёР№</th><th>Р¦РµРЅР° BTC</th><th>РџРѕР·РёС†РёСЏ</th><th>О”</th></tr></thead>
+          <tbody>{[-30, -20, -10, 0, 10, 20, 50].map(percent => <tr key={percent}><td>{percent > 0 ? '+' : ''}{percent}%</td>
+            <td>{price > 0 ? fmtMinor(toMinor(price * (1 + percent / 100))) : 'вЂ”'}</td>
+            <td>{m.btcMinor ? fmtMinor(Math.round(m.btcMinor * (1 + percent / 100))) : 'вЂ”'}</td>
+            <td>{m.btcMinor ? fmtMinor(Math.round(m.btcMinor * percent / 100)) : 'вЂ”'}</td></tr>)}</tbody></table>
+          <div className="metric-caption">РЎС†РµРЅР°СЂРёРё РёР·РјРµРЅРµРЅРёСЏ С†РµРЅС‹, РЅРµ РїСЂРѕРіРЅРѕР·.</div></div>}
+      </>;
+    }
+
+    if (id === 'workshop') return <>
+      <div className="metric-value">{forSale.length}<span className="metric-unit">СЃР±РѕСЂРѕРє</span></div>
+      <div className="metric-caption">Р“РѕС‚РѕРІРѕ Рє РїСЂРѕРґР°Р¶Рµ В· РїРѕС‚РµРЅС†РёР°Р»СЊРЅР°СЏ РїСЂРёР±С‹Р»СЊ {fmtMinor(potential)}</div>
+      <div className="widget-detail"><span>РљР°СЃСЃР° Р±РёР·РЅРµСЃР°</span><strong>{fmtMinor(d.bal.get('acc-box') ?? 0)}</strong></div>
+      <div className="widget-detail"><span>Р’С‹СЂСѓС‡РєР° В· РїСЂРёР±С‹Р»СЊ Р·Р° РјРµСЃСЏС†</span><strong>{fmtMinor(m.bizRevenueMonth)} В· {fmtMinor(m.bizProfitMonth)}</strong></div>
+      <button className="text-action" onClick={() => go('flip')}>РћС‚РєСЂС‹С‚СЊ РјР°СЃС‚РµСЂСЃРєСѓСЋ в†’</button>
+    </>;
+
+    if (id === 'recent') {
+      const recent = [...d.txs].sort((a, b) => b.ts - a.ts).slice(0, 6);
+      return recent.length ? <>
+        <div className="recent-list">{recent.map(tx => {
+          const entries = tx.entries.filter(entry => !entry.acc.startsWith('virt:'));
+          const amount = tx.type === 'TRANSFER' ? Math.max(0, ...entries.map(entry => entry.amt))
+            : entries.length ? entries.reduce((sum, entry) => sum + entry.amt, 0)
+            : Math.max(0, ...tx.entries.map(entry => Math.abs(entry.amt)));
+          const isIncome = tx.type === 'INCOME' || tx.type === 'SELL_BUILD' || tx.type === 'DRAW' || (tx.type === 'ADJUST' && amount > 0);
+          const isExpense = tx.type === 'EXPENSE' || tx.type === 'BUY_COMPONENTS';
+          const category = tx.categoryId ? d.cats.find(item => item.id === tx.categoryId)?.name : undefined;
+          return <div className="recent-item" key={tx.id}><span className={`recent-sign ${isIncome ? 'income' : isExpense ? 'expense' : ''}`}>{isIncome ? 'в†—' : isExpense ? 'в†' : 'В·'}</span>
+            <span className="recent-copy"><strong>{tx.note || category || TX_LABELS[tx.type]}</strong><small>{new Date(tx.ts).toLocaleDateString('ru-RU')} В· {category || TX_LABELS[tx.type]}</small></span>
+            <span className={`recent-amount ${isIncome ? 'income' : isExpense ? 'expense' : ''}`}>{isIncome ? '+' : isExpense ? 'в€’' : ''}{fmtMinor(Math.abs(amount))}</span></div>;
+        })}</div>
+        <button className="text-action" onClick={() => go('fin')}>Р’СЃРµ РѕРїРµСЂР°С†РёРё в†’</button>
+      </> : <div className="widget-empty">РћРїРµСЂР°С†РёР№ РїРѕРєР° РЅРµС‚</div>;
+    }
+
+    return <>
+      {m.nextIncomeTs && <div className="ev">Р”РѕС…РѕРґ В· {new Date(m.nextIncomeTs).toLocaleDateString('ru-RU')}<b>{fmtDays(m.daysToIncome)}</b></div>}
+      {due && <div className="ev">{due.name} В· {due.date.toLocaleDateString('ru-RU')}<b>{fmtMinor(due.amount)}</b></div>}
+      {!m.nextIncomeTs && !due && <div className="widget-empty">РќРµС‚ Р·Р°РїР»Р°РЅРёСЂРѕРІР°РЅРЅС‹С… РїРѕСЃС‚СѓРїР»РµРЅРёР№ РёР»Рё РїР»Р°С‚РµР¶РµР№</div>}
+    </>;
+  };
+
+  return (
+    <div className="dashboard">
+      {d.mismatch && <div className="warn">РЎРІРµСЂРєР°: Р±Р°Р»Р°РЅСЃ СЃС‡РµС‚РѕРІ СЂР°СЃС…РѕРґРёС‚СЃСЏ СЃРѕ СЃРєР»Р°РґРѕРј РёР»Рё СЃР±РѕСЂРєР°РјРё. РџСЂРѕРІРµСЂСЊС‚Рµ РѕРїРµСЂР°С†РёРё.</div>}
+      <div className="dashboard-toolbar"><span className="dashboard-status">Р›РѕРєР°Р»СЊРЅР°СЏ С„РёРЅР°РЅСЃРѕРІР°СЏ СЃРёСЃС‚РµРјР° <span>В·</span> РґР°РЅРЅС‹Рµ РѕР±РЅРѕРІР»РµРЅС‹ СЃРµР№С‡Р°СЃ</span>
+        <div className="dashboard-toolbar-actions">{editing ? <>
+          <select aria-label="Р”РѕР±Р°РІРёС‚СЊ РІРёРґР¶РµС‚" value="" onChange={event => {
+            const id = event.target.value as WidgetId;
+            if (id) setLayout(current => ({ ...current, widgets: [...current.widgets, id] }));
+          }}><option value="">пј‹ Р”РѕР±Р°РІРёС‚СЊ РІРёРґР¶РµС‚</option>{availableWidgets.map(widget => <option key={widget.id} value={widget.id}>{widget.title}</option>)}</select>
+          <button onClick={() => { setLayout(DEFAULT_LAYOUT); setRange(30); }}>РЎР±СЂРѕСЃРёС‚СЊ СЂР°СЃРєР»Р°РґРєСѓ</button>
+          <button className="primary" onClick={() => setEditing(false)}>Р“РѕС‚РѕРІРѕ</button>
+        </> : <button onClick={() => setEditing(true)}>РќР°СЃС‚СЂРѕРёС‚СЊ РїР°РЅРµР»СЊ</button>}</div>
+      </div>
+      {editing && <div className="edit-notice">РџРµСЂРµСЃС‚Р°РІСЊС‚Рµ РІРёРґР¶РµС‚С‹, РёР·РјРµРЅРёС‚Рµ РёС… С€РёСЂРёРЅСѓ РёР»Рё СЃРєСЂРѕР№С‚Рµ РЅРµРЅСѓР¶РЅС‹Рµ. Р—Р°РєСЂРµРїР»С‘РЅРЅС‹Рµ РІРёРґР¶РµС‚С‹ РѕСЃС‚Р°СЋС‚СЃСЏ РІРІРµСЂС…Сѓ.</div>}
+      <div className="dashboard-grid">
+        {layout.widgets.map((id, index) => {
+          const widget = WIDGETS.find(item => item.id === id)!;
+          const pinned = layout.pinned.includes(id);
+          return <article className={`widget ${layout.wide.includes(id) ? 'widget-wide' : ''}`} key={id}>
+            <div className="widget-inner"><header className="widget-header"><div><div className="widget-kicker">{widget.kicker}</div><h2 className="widget-title">{widget.title}</h2></div>
+              {editing && <div className="widget-controls">
+                <button title={pinned ? 'РћС‚РєСЂРµРїРёС‚СЊ' : 'Р—Р°РєСЂРµРїРёС‚СЊ'} aria-label={pinned ? 'РћС‚РєСЂРµРїРёС‚СЊ РІРёРґР¶РµС‚' : 'Р—Р°РєСЂРµРїРёС‚СЊ РІРёРґР¶РµС‚'} onClick={() => togglePin(id)}>{pinned ? 'в—†' : 'в—‡'}</button>
+                <button title="Р’С‹С€Рµ" aria-label="РџРµСЂРµРјРµСЃС‚РёС‚СЊ РІРёРґР¶РµС‚ РІС‹С€Рµ" disabled={index === 0 || pinned !== layout.pinned.includes(layout.widgets[index - 1]!)} onClick={() => moveWidget(id, -1)}>в†‘</button>
+                <button title="РќРёР¶Рµ" aria-label="РџРµСЂРµРјРµСЃС‚РёС‚СЊ РІРёРґР¶РµС‚ РЅРёР¶Рµ" disabled={index === layout.widgets.length - 1 || pinned !== layout.pinned.includes(layout.widgets[index + 1]!)} onClick={() => moveWidget(id, 1)}>в†“</button>
+                <button title="РР·РјРµРЅРёС‚СЊ С€РёСЂРёРЅСѓ" aria-label="РР·РјРµРЅРёС‚СЊ С€РёСЂРёРЅСѓ РІРёРґР¶РµС‚Р°" onClick={() => setLayout(current => ({ ...current,
+                  wide: current.wide.includes(id) ? current.wide.filter(item => item !== id) : [...current.wide, id] }))}>в†”</button>
+                <button title={pinned ? 'РЎРЅР°С‡Р°Р»Р° РѕС‚РєСЂРµРїРёС‚Рµ РІРёРґР¶РµС‚' : 'РЎРєСЂС‹С‚СЊ РІРёРґР¶РµС‚'} aria-label="РЎРєСЂС‹С‚СЊ РІРёРґР¶РµС‚" disabled={pinned}
+                  onClick={() => setLayout(current => ({ ...current, widgets: current.widgets.filter(item => item !== id), wide: current.wide.filter(item => item !== id) }))}>Г—</button>
+              </div>}
+            </header>{renderWidget(id)}</div>
+          </article>;
+        })}
+        {!layout.widgets.length && <div className="widget-empty">Р’СЃРµ РІРёРґР¶РµС‚С‹ СЃРєСЂС‹С‚С‹. Р”РѕР±Р°РІСЊС‚Рµ РІРёРґР¶РµС‚ РІ СЂРµР¶РёРјРµ РЅР°СЃС‚СЂРѕР№РєРё РїР°РЅРµР»Рё.</div>}
+      </div>
+      <WhatIf m={m} />
+    </div>
+  );
+}
+
+function WhatIf({ m }: { m: Metrics }) {
+  const [open, setOpen] = useState(false);
+  const [rub, setRub] = useState(15000);
+  const [negative, setNegative] = useState(true);
+  if (!open) return <div className="actions"><button onClick={() => setOpen(true)}>Р§С‚Рѕ Р±СѓРґРµС‚, РµСЃР»Рё...</button></div>;
+  const liquid = m.liquidMinor + (negative ? -1 : 1) * toMinor(rub);
+  const calculate = (amount: number) => ({ sts: Math.max(0, amount - m.essentialMinor - m.committedMinor),
+    runway: m.minBurnMinor > 0 ? amount / (m.minBurnMinor / DIM) : null });
+  const before = calculate(m.liquidMinor), after = calculate(liquid);
+  return <section className="card">
+    <div className="widget-header"><h2>РЎР¦Р•РќРђР РР™ Р РђРЎРҐРћР”Рђ РР›Р Р”РћРҐРћР”Рђ</h2><button aria-label="Р—Р°РєСЂС‹С‚СЊ" onClick={() => setOpen(false)}>Г—</button></div>
+    <div className="frm"><select value={String(negative)} onChange={event => setNegative(event.target.value === 'true')}>
+      <option value="true">Р Р°СЃС…РѕРґ</option><option value="false">Р”РѕС…РѕРґ</option></select>
+      <input aria-label="РЎСѓРјРјР° СЃС†РµРЅР°СЂРёСЏ" type="number" min="0" value={rub} onChange={event => setRub(+event.target.value)} /><span>в‚Ѕ</span></div>
+    <table className="tbl"><thead><tr><th></th><th>Р”Рѕ</th><th>РџРѕСЃР»Рµ</th></tr></thead><tbody>
+      <tr><td>Р›РёРєРІРёРґРЅС‹Рµ</td><td>{fmtMinor(m.liquidMinor)}</td><td>{fmtMinor(liquid)}</td></tr>
+      <tr><td>Safe to Spend</td><td>{fmtMinor(before.sts)}</td><td>{fmtMinor(after.sts)}</td></tr>
+      <tr><td>Runway</td><td>{fmtDays(before.runway)}</td><td>{fmtDays(after.runway)}</td></tr>
+    </tbody></table>
+  </section>;
+}
+
+==================== src\ui\Finance.tsx ====================
+import { useState } from 'react';
+import { useData } from '../hooks';
+import { db } from '../db';
+import { txIncome, txExpense, txTransfer, txOpening } from '../engine/link';
+import { fmtMinor, toMinor, uid, todayISO } from '../engine/utils';
+import { VIRT, type Reliability } from '../types';
+
+export default function Finance() {
+  const d = useData();
+  const [type, setType] = useState<'INCOME' | 'EXPENSE' | 'TRANSFER'>('EXPENSE');
+  const [acc, setAcc] = useState(''); const [toAcc, setToAcc] = useState('');
+  const [amt, setAmt] = useState(''); const [cat, setCat] = useState(''); const [note, setNote] = useState('');
+  const real = d.accounts.filter(a => a.status !== 'CLOSED');
+  const accId = acc || real[0]?.id || '';
+
+  const save = async () => {
+    const a = toMinor(+amt); if (a <= 0 || !accId) return;
+    if (type === 'TRANSFER' && !toAcc) return;
+    const t = type === 'INCOME' ? txIncome(Date.now(), accId, a, cat || undefined, note)
+      : type === 'EXPENSE' ? txExpense(Date.now(), accId, a, cat || undefined, note)
+      : txTransfer(Date.now(), accId, toAcc, a, note);
+    await db.txs.add(t); setAmt(''); setNote('');
+  };
+
+  return (
+    <div>
+      <section className="card">
+        <h2>РЎС‡РµС‚Р°</h2>
+        {real.map(a => <div key={a.id} className="row">
+          <span>{a.name} {a.status === 'ARRESTED' ? 'В· рџ”’ Р°СЂРµСЃС‚' : ''}</span><b>{fmtMinor(d.bal.get(a.id) ?? 0)}</b></div>)}
+        <div className="row muted"><span>РќР°РєРѕРїР»РµРЅРЅС‹Р№ СЂРµР·СѓР»СЊС‚Р°С‚ (PNL)</span><b>{fmtMinor(-(d.bal.get(VIRT.PNL) ?? 0))}</b></div>
+        <h3>Р”РѕР±Р°РІРёС‚СЊ СЃС‡С‘С‚</h3>
+        <AccountForm />
+      </section>
+
+      <section className="card">
+        <h2>РќРѕРІР°СЏ РѕРїРµСЂР°С†РёСЏ</h2>
+        <div className="frm">
+          <select value={type} onChange={e => setType(e.target.value as any)}>
+            <option value="EXPENSE">Р Р°СЃС…РѕРґ</option><option value="INCOME">Р”РѕС…РѕРґ</option><option value="TRANSFER">РџРµСЂРµРІРѕРґ</option>
+          </select>
+          <select value={accId} onChange={e => setAcc(e.target.value)}>
+            {real.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+          </select>
+          {type === 'TRANSFER' && (
+            <select value={toAcc} onChange={e => setToAcc(e.target.value)}>
+              <option value="">в†’ РєСѓРґР°</option>
+              {real.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+            </select>)}
+          <input type="number" placeholder="в‚Ѕ" value={amt} onChange={e => setAmt(e.target.value)} />
+          {type !== 'TRANSFER' && (
+            <select value={cat} onChange={e => setCat(e.target.value)}>
+              <option value="">РєР°С‚РµРіРѕСЂРёСЏ</option>
+              {d.cats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>)}
+          <input placeholder="Р·Р°РјРµС‚РєР°" value={note} onChange={e => setNote(e.target.value)} />
+          <button className="primary" onClick={save}>OK</button>
+        </div>
+        <p className="muted">РџРѕРєСѓРїРєР° РєРѕРјРїР»РµРєС‚СѓСЋС‰РёС… вЂ” РЅРµ Р·РґРµСЃСЊ, Р° РІ В«РњР°СЃС‚РµСЂСЃРєРѕР№В»: РїСЂРѕРІРѕРґРєР° СЃРѕР·РґР°С‘С‚СЃСЏ СЃР°РјР°.</p>
+      </section>
+
+      <section className="card">
+        <h2>РџРѕС‚РѕРєРё РґРѕС…РѕРґР°</h2>
+        {d.streams.map(s => <div key={s.id} className="row">
+          <span>{s.name} В· {s.reliability}{s.reliability === 'EXPECTED' ? ` Г—${s.coef}` : ''}{s.day ? ` В· ${s.day}-Рµ` : ''}</span>
+          <b>{fmtMinor(s.amountMinor)}</b></div>)}
+        <StreamForm />
+      </section>
+
+      <section className="card">
+        <h2>РћР±СЏР·Р°С‚РµР»СЊСЃС‚РІР°</h2>
+        {d.lias.map(l => <div key={l.id} className="row">
+          <span>{l.name} В· {l.status === 'ACTIVE' ? `Р°РєС‚РёРІРЅРѕ${l.monthlyMinor ? `, ${fmtMinor(l.monthlyMinor)}/РјРµСЃ` : ''}` : 'РІ РїСЂРѕС†РµРґСѓСЂРµ (РІРЅРµ СЂР°СЃС‡С‘С‚РѕРІ)'}</span>
+          <b>{fmtMinor(l.principalMinor)}</b></div>)}
+        <LiabForm />
+      </section>
+    </div>
+  );
+}
+
+function AccountForm() {
+  const [f, setF] = useState({ name: '', kind: 'CARD', open: '', arrested: false });
+  const save = async () => {
+    if (!f.name.trim()) return;
+    const id = uid();
+    await db.transaction('rw', [db.accounts, db.txs], async () => {
+      await db.accounts.add({ id, name: f.name.trim(), kind: f.kind as any,
+        isLiquid: f.kind !== 'CASHBOX', status: f.arrested ? 'ARRESTED' : 'ACTIVE' });
+      if (+f.open > 0) await db.txs.add(txOpening(Date.now(), id, toMinor(+f.open)));
+    });
+    setF({ ...f, name: '', open: '' });
+  };
+  return (
+    <div className="frm">
+      <input placeholder="РЅР°Р·РІР°РЅРёРµ (РЅР°РїСЂ. РњРѕР№ Р±Р°РЅРє)" value={f.name} onChange={e => setF({ ...f, name: e.target.value })} />
+      <select value={f.kind} onChange={e => setF({ ...f, kind: e.target.value })}>
+        <option value="CARD">РљР°СЂС‚Р°</option><option value="CASH">РќР°Р»РёС‡РЅС‹Рµ</option>
+        <option value="SAVINGS">РќР°РєРѕРїРёС‚РµР»СЊРЅС‹Р№</option><option value="CASHBOX">РљР°СЃСЃР° Р±РёР·РЅРµСЃР°</option>
+      </select>
+      <input type="number" placeholder="РѕСЃС‚Р°С‚РѕРє СЃРµР№С‡Р°СЃ в‚Ѕ" value={f.open} onChange={e => setF({ ...f, open: e.target.value })} />
+      <label className="muted"><input type="checkbox" checked={f.arrested}
+        onChange={e => setF({ ...f, arrested: e.target.checked })} /> Р°СЂРµСЃС‚РѕРІР°РЅ</label>
+      <button onClick={save}>+</button>
+    </div>
+  );
+}
+
+const Row = ({ label, value }: any) => <div className="row"><span>{label}</span><b>{value}</b></div>;
+
+function StreamForm() {
+  const [f, setF] = useState({ name: '', rel: 'GUARANTEED' as Reliability, amt: '', day: '15' });
+  const save = async () => {
+    if (!f.name || +f.amt <= 0) return;
+    await db.streams.add({ id: uid(), name: f.name, reliability: f.rel,
+      coef: f.rel === 'EXPECTED' ? 0.75 : 1, kind: 'MONTHLY', day: +f.day, amountMinor: toMinor(+f.amt) });
+    setF({ ...f, name: '', amt: '' });
+  };
+  return <div className="frm">
+    <input placeholder="РЅР°Р·РІР°РЅРёРµ" value={f.name} onChange={e => setF({ ...f, name: e.target.value })} />
+    <select value={f.rel} onChange={e => setF({ ...f, rel: e.target.value as Reliability })}>
+      <option>GUARANTEED</option><option>EXPECTED</option><option>POSSIBLE</option>
+    </select>
+    <input type="number" placeholder="в‚Ѕ/РјРµСЃ" value={f.amt} onChange={e => setF({ ...f, amt: e.target.value })} />
+    <input type="number" placeholder="РґРµРЅСЊ" value={f.day} onChange={e => setF({ ...f, day: e.target.value })} />
+    <button onClick={save}>+</button>
+  </div>;
+}
+
+function LiabForm() {
+  const [f, setF] = useState({ name: '', amt: '', mon: '', day: '', frozen: false });
+  const save = async () => {
+    if (!f.name || +f.amt <= 0) return;
+    await db.liabilities.add({ id: uid(), name: f.name, kind: f.frozen ? 'CREDIT' : 'PERSONAL',
+      principalMinor: toMinor(+f.amt), status: f.frozen ? 'LEGAL_FROZEN' : 'ACTIVE',
+      activeInCashflow: !f.frozen, monthlyMinor: +f.mon ? toMinor(+f.mon) : undefined, day: +f.day || undefined });
+    setF({ ...f, name: '', amt: '', mon: '' });
+  };
+  return <div className="frm">
+    <input placeholder="РЅР°Р·РІР°РЅРёРµ" value={f.name} onChange={e => setF({ ...f, name: e.target.value })} />
+    <input type="number" placeholder="РґРѕР»Рі в‚Ѕ" value={f.amt} onChange={e => setF({ ...f, amt: e.target.value })} />
+    <input type="number" placeholder="в‚Ѕ/РјРµСЃ" value={f.mon} onChange={e => setF({ ...f, mon: e.target.value })} />
+    <input type="number" placeholder="РґРµРЅСЊ" value={f.day} onChange={e => setF({ ...f, day: e.target.value })} />
+    <label className="muted"><input type="checkbox" checked={f.frozen}
+      onChange={e => setF({ ...f, frozen: e.target.checked })} /> РІ РїСЂРѕС†РµРґСѓСЂРµ</label>
+    <button onClick={save}>+</button>
+  </div>;
+}
+
+==================== src\ui\Flip.tsx ====================
+import { useMemo, useState } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '../db';
+import { checkCompat, hasFail, dealMetrics, specLine, compCost, type Parts, type Check } from '../engine/flip';
+import { txPurchase, txAssemble, txUnassemble, txSell, txExpense } from '../engine/link';
+import { fmtMinor, fmtPct, toMinor, uid, todayISO, type Minor } from '../engine/utils';
+import type { Account, Build, Component, CompCat } from '../types';
+
+const CATS: CompCat[] = ['CPU', 'MB', 'RAM', 'GPU', 'STORAGE', 'PSU', 'CASE', 'COOLER'];
+
+export default function Flip() {
+  const [tab, setTab] = useState<'stock' | 'buy' | 'build'>('stock');
+  const comps = useLiveQuery(() => db.components.toArray(), []) ?? [];
+  const builds = useLiveQuery(() => db.builds.toArray(), []) ?? [];
+  const accounts = useLiveQuery(() => db.accounts.toArray(), []) ?? [];
+  const boxAcc = accounts.find(a => a.kind === 'CASHBOX')?.id ?? accounts[0]?.id ?? '';
+  const byId = useMemo(() => new Map(comps.map(c => [c.id, c])), [comps]);
+
+  return (
+    <div>
+      <div className="actions">
+        <button className={tab === 'stock' ? 'on' : ''} onClick={() => setTab('stock')}>РЎРєР»Р°Рґ / РЎР±РѕСЂРєРё</button>
+        <button className={tab === 'buy' ? 'on' : ''} onClick={() => setTab('buy')}>+ Р—РђРљРЈРџРљРђ</button>
+        <button className={tab === 'build' ? 'on' : ''} onClick={() => setTab('build')}>РљРћРќР¤РР“РЈР РђРўРћР </button>
+      </div>
+      {tab === 'stock' && <Stock comps={comps} builds={builds} byId={byId} boxAcc={boxAcc} />}
+      {tab === 'buy' && <PurchaseForm accounts={accounts} />}
+      {tab === 'build' && <Configurator comps={comps} builds={builds} byId={byId} />}
+    </div>
+  );
+}
+
+// в”Ђв”Ђ Р—РђРљРЈРџРљРђ: РїРѕР·РёС†РёРё РїР°РґР°СЋС‚ РЅР° СЃРєР»Р°Рґ + РїСЂРѕРІРѕРґРєР° В«РґРµРЅСЊРіРё в†’ РЎРєР»Р°РґВ» в”Ђв”Ђ
+function PurchaseForm({ accounts }: { accounts: Account[] }) {
+  const [seller, setSeller] = useState(''); const [payAcc, setPayAcc] = useState('');
+  const [items, setItems] = useState([{ cat: 'CPU', brand: '', model: '', price: '', cond: 'USED' }]);
+  const total = items.reduce((s, i) => s + (+i.price || 0), 0);
+  const accId = payAcc || accounts[0]?.id || '';
+  const upd = (k: number, patch: any) => setItems(items.map((x, j) => j === k ? { ...x, ...patch } : x));
+
+  const save = async () => {
+    if (total <= 0) return;
+    await db.transaction('rw', [db.components, db.txs], async () => {
+      await db.components.bulkPut(items.map(i => ({
+        id: uid(), category: i.cat, brand: i.brand, model: i.model, condition: i.cond,
+        priceMinor: toMinor(+i.price), date: todayISO(), seller, status: 'IN_STOCK', specs: {},
+      } as Component)));
+      await db.txs.add(txPurchase(Date.now(), accId, toMinor(total), `Р—Р°РєСѓРїРєР°: ${seller || 'вЂ”'}`));
+    });
+    setItems([{ cat: 'CPU', brand: '', model: '', price: '', cond: 'USED' }]); setSeller('');
+  };
+
+  return (
+    <div className="card">
+      <h3>РќРѕРІР°СЏ Р·Р°РєСѓРїРєР°</h3>
+      <input placeholder="РџСЂРѕРґР°РІРµС†" value={seller} onChange={e => setSeller(e.target.value)} />
+      <select value={accId} onChange={e => setPayAcc(e.target.value)}>
+        {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+      </select>
+      {items.map((it, k) => (
+        <div key={k} className="frm">
+          <select value={it.cat} onChange={e => upd(k, { cat: e.target.value })}>{CATS.map(c => <option key={c}>{c}</option>)}</select>
+          <input placeholder="Р±СЂРµРЅРґ" value={it.brand} onChange={e => upd(k, { brand: e.target.value })} />
+          <input placeholder="РјРѕРґРµР»СЊ" value={it.model} onChange={e => upd(k, { model: e.target.value })} />
+          <select value={it.cond} onChange={e => upd(k, { cond: e.target.value })}>
+            <option>NEW</option><option>USED</option><option>REFURB</option><option>UNKNOWN</option>
+          </select>
+          <input type="number" placeholder="в‚Ѕ" value={it.price} onChange={e => upd(k, { price: e.target.value })} />
+          <button onClick={() => setItems(items.filter((_, j) => j !== k))}>вњ•</button>
+        </div>))}
+      <button onClick={() => setItems([...items, { cat: 'CPU', brand: '', model: '', price: '', cond: 'USED' }])}>+ РїРѕР·РёС†РёСЏ</button>
+      <div>РС‚РѕРіРѕ: <b>{fmtMinor(toMinor(total))}</b> В· РЎСѓРјРјР° РїРѕР·РёС†РёР№ = С‡РµРє (РєРѕРјРїР»РµРєС‚ РїСЂРѕСЃС‚Рѕ СЂР°Р·Р±РёРІР°Р№ РЅР° СЃС‚СЂРѕРєРё)</div>
+      <button className="primary" disabled={total <= 0} onClick={save}>РЎРћРҐР РђРќРРўР¬ Р—РђРљРЈРџРљРЈ</button>
+    </div>);
+}
+
+// в”Ђв”Ђ РљРћРќР¤РР“РЈР РђРўРћР : Р¶РёРІР°СЏ СЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚СЊ + СЃРѕР·РґР°РЅРёРµ СЃР±РѕСЂРєРё РѕРґРЅРѕР№ С‚СЂР°РЅР·Р°РєС†РёРµР№ в”Ђв”Ђ
+function partsOf(list: Component[]): Parts {
+  const one = (k: string) => list.find(c => c.category === k)?.specs;
+  return { cpu: one('CPU'), mb: one('MB'), gpu: one('GPU'), psu: one('PSU'), case_: one('CASE'), cooler: one('COOLER'),
+    ram: list.filter(c => c.category === 'RAM').map(c => c.specs),
+    storage: list.filter(c => c.category === 'STORAGE').map(c => c.specs) };
+}
+
+function Configurator({ comps, builds, byId }: { comps: Component[]; builds: Build[]; byId: Map<string, Component> }) {
+  const stock = comps.filter(c => c.status === 'IN_STOCK');
+  const [sel, setSel] = useState<Set<string>>(new Set());
+  const [target, setTarget] = useState('');
+  const chosen = [...sel].map(id => byId.get(id)!).filter(Boolean);
+  const parts = useMemo(() => partsOf(chosen), [sel, byId]);
+  const checks: Check[] = useMemo(() => (sel.size ? checkCompat(parts) : []), [parts, sel]);
+  const cost: Minor = chosen.reduce((s, c) => s + c.priceMinor, 0);
+  const dm = dealMetrics(cost, toMinor(+target || 0));
+  const fail = hasFail(checks);
+
+  const create = async () => {
+    if (!sel.size || +target <= 0 || fail) return;
+    const n = builds.reduce((mx, b) => Math.max(mx, b.num), 0) + 1;
+    const id = uid();
+    await db.transaction('rw', [db.builds, db.components, db.txs], async () => {
+      await db.builds.add({ id, num: n, status: 'FOR_SALE', componentIds: [...sel],
+        extras: [], targetPriceMinor: toMinor(+target), assembledAt: todayISO() });
+      await db.components.bulkPut([...sel].map(sid => ({ ...byId.get(sid)!, status: 'INSTALLED', buildId: id })));
+      await db.txs.add(txAssemble(Date.now(), id, cost)); // в†ђ РїСЂРѕРІРѕРґРєР° РІ С„РёРЅР°РЅСЃС‹
+    });
+    setSel(new Set()); setTarget('');
+  };
+
+  return (
+    <div>
+      <table className="tbl"><thead><tr><th></th><th>Р”РµС‚Р°Р»СЊ</th><th>РљР°С‚РµРіРѕСЂРёСЏ</th><th>Р¦РµРЅР°</th></tr></thead><tbody>
+        {stock.map(c => <tr key={c.id}>
+          <td><input type="checkbox" checked={sel.has(c.id)} onChange={e => {
+            const s = new Set(sel); e.target.checked ? s.add(c.id) : s.delete(c.id); setSel(s); }} /></td>
+          <td>{c.brand} {c.model}</td><td>{c.category}</td><td>{fmtMinor(c.priceMinor)}</td>
+        </tr>)}
+      </tbody></table>
+      <div className="card">
+        <div className="frm">
+          <label>Р¦РµР»СЊ РїСЂРѕРґР°Р¶Рё: <input type="number" placeholder="в‚Ѕ" value={target} onChange={e => setTarget(e.target.value)} /></label>
+        </div>
+        <div>РЎРµР±РµСЃС‚РѕРёРјРѕСЃС‚СЊ: <b>{fmtMinor(cost)}</b> В· РџСЂРёР±С‹Р»СЊ: <b>{fmtMinor(dm.profit)}</b> В· ROI: <b>{fmtPct(dm.roiPct)}</b></div>
+        {checks.map((c, i) => <div key={i}>{c.level === 'OK' ? 'рџџў' : c.level === 'WARN' ? 'рџџЎ' : 'рџ”ґ'} {c.pair} вЂ” {c.msg}</div>)}
+        <button className="primary" disabled={!sel.size || +target <= 0 || fail} onClick={create}>
+          {fail ? 'РЎРћР—Р”РђРўР¬ РЎР‘РћР РљРЈ (рџ”ґ РЅРµСЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚Рё)' : 'РЎРћР‘Р РђРўР¬ Р Р’Р«РЎРўРђР’РРўР¬ РќРђ РџР РћР”РђР–РЈ'}
+        </button>
+      </div>
+    </div>);
+}
+
+// в”Ђв”Ђ РЎРљР›РђР”/РЎР‘РћР РљР: РїСЂРѕРґР°Р¶Р° РѕРґРЅРѕР№ РєРЅРѕРїРєРѕР№ вЂ” 3 РїСЂРѕРІРѕРґРєРё + СЃС‚Р°С‚СѓСЃС‹ Р°С‚РѕРјР°СЂРЅРѕ в”Ђв”Ђ
+function Stock({ comps, builds, byId, boxAcc }: {
+  comps: Component[]; builds: Build[]; byId: Map<string, Component>; boxAcc: string;
+}) {
+  const [sell, setSell] = useState<Record<string, { p: string; f: string; x: string }>>({});
+  const doSell = async (b: Build) => {
+    const s = sell[b.id]; if (!s || +s.p <= 0) return;
+    const list = b.componentIds.map(id => byId.get(id)!).filter(Boolean);
+    const cc = compCost(b, byId);
+    await db.transaction('rw', [db.builds, db.components, db.txs], async () => {
+      const ops = [txSell(Date.now(), b.id, boxAcc, toMinor(+s.p), cc, toMinor(+s.f || 0))];
+      if (+s.x > 0) ops.push(txExpense(Date.now(), boxAcc, toMinor(+s.x), undefined, `Р”РѕРї.СЂР°СЃС…РѕРґ РџРљ#${b.num}`, b.id));
+      await db.txs.bulkPut(ops);
+      await db.builds.update(b.id, { status: 'SOLD', soldAt: todayISO() });
+      await db.components.bulkPut(list.map(c => ({ ...c, status: 'SOLD' })));
+    });
+    setSell({ ...sell, [b.id]: { p: '', f: '', x: '' } });
+  };
+  const disassemble = async (b: Build) => {
+    const list = b.componentIds.map(id => byId.get(id)!).filter(Boolean);
+    await db.transaction('rw', [db.builds, db.components, db.txs], async () => {
+      await db.txs.add(txUnassemble(Date.now(), b.id, compCost(b, byId)));
+      await db.builds.update(b.id, { status: 'STALLED' });
+      await db.components.bulkPut(list.map(c => ({ ...c, status: 'IN_STOCK', buildId: undefined })));
+    });
+  };
+
+  return (
+    <div>
+      {builds.map(b => {
+        const cc = compCost(b, byId), fc = cc + b.extras.reduce((s, e) => s + e.amt, 0);
+        const dm = dealMetrics(fc, b.targetPriceMinor ?? 0);
+        const s = sell[b.id] ?? { p: '', f: '', x: '' };
+        return (
+          <div key={b.id} className="card">
+            <b>РџРљ #{String(b.num).padStart(3, '0')}</b> В· {specLine(b.componentIds.map(id => byId.get(id)!).filter(Boolean))}
+            <div className="row"><span>РЎС‚Р°С‚СѓСЃ</span><b>{b.status === 'SOLD' ? 'рџџў РїСЂРѕРґР°РЅ' : b.status === 'FOR_SALE' ? 'рџџЎ РІ РїСЂРѕРґР°Р¶Рµ' : b.status}</b></div>
+            <div className="row"><span>РЎРµР±РµСЃС‚РѕРёРјРѕСЃС‚СЊ / С†РµР»СЊ</span>
+              <b>{fmtMinor(fc)} / {fmtMinor(b.targetPriceMinor ?? 0)}</b></div>
+            {b.status !== 'SOLD' && <div className="row"><span>РџСЂРёР±С‹Р»СЊ / ROI РїСЂРё С†РµР»Рё</span>
+              <b>{fmtMinor(dm.profit)} В· {fmtPct(dm.roiPct)}</b></div>}
+            {b.soldAt && <div className="muted">РџСЂРѕРґР°РЅ {b.soldAt}</div>}
+            {b.status === 'FOR_SALE' && (
+              <div className="frm">
+                <input placeholder="С†РµРЅР° в‚Ѕ" value={s.p} onChange={e => setSell({ ...sell, [b.id]: { ...s, p: e.target.value } })} />
+                <input placeholder="РєРѕРјРёСЃСЃРёСЏ в‚Ѕ" value={s.f} onChange={e => setSell({ ...sell, [b.id]: { ...s, f: e.target.value } })} />
+                <input placeholder="РґРѕРї.СЂР°СЃС…РѕРґ в‚Ѕ" value={s.x} onChange={e => setSell({ ...sell, [b.id]: { ...s, x: e.target.value } })} />
+                <button className="primary" onClick={() => doSell(b)}>РџР РћР”РђРќРћ</button>
+                <button onClick={() => disassemble(b)}>Р Р°Р·РѕР±СЂР°С‚СЊ</button>
+              </div>)}
+          </div>);
+      })}
+      <h3>РЎРєР»Р°Рґ (СЃРІРѕР±РѕРґРЅС‹Рµ Р»РѕС‚С‹)</h3>
+      <table className="tbl"><thead><tr><th>Р”РµС‚Р°Р»СЊ</th><th>РљР°С‚РµРіРѕСЂРёСЏ</th><th>РЎРѕСЃС‚РѕСЏРЅРёРµ</th><th>Р¦РµРЅР°</th></tr></thead><tbody>
+        {comps.filter(c => c.status === 'IN_STOCK').map(c =>
+          <tr key={c.id}><td>{c.brand} {c.model}</td><td>{c.category}</td><td>{c.condition}</td><td>{fmtMinor(c.priceMinor)}</td></tr>)}
+      </tbody></table>
+    </div>);
+}
+
+==================== src\ui\Settings.tsx ====================
+import { useEffect, useState } from 'react';
+import { db } from '../db';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { VIRT, type Component, type CompCat } from '../types';
+import { toMinor, uid, todayISO } from '../engine/utils';
+
+const CATS: CompCat[] = ['CPU', 'MB', 'RAM', 'GPU', 'STORAGE', 'PSU', 'CASE', 'COOLER'];
+
+export default function Settings() {
+  const kv = useLiveQuery(() => db.kv.toArray(), []) ?? [];
+  const S = Object.fromEntries(kv.map(r => [r.k, r.v]));
+  const [f, setF] = useState<any>({});
+  useEffect(() => { setF({ btcSats: S.btcSats ?? 0, btcPriceRub: S.btcPriceRub ?? 0,
+    reserveMonths: S.reserveMonths ?? 1, manualMinBurn: S.manualMinBurn ?? 0 }); }, [kv.length]);
+  const put = async (k: string, v: any) => db.kv.put({ k, v });
+
+  const cleanStart = async () => {
+    if (!confirm('РЈРґР°Р»РёС‚СЊ Р’РЎР• РґР°РЅРЅС‹Рµ (РІРєР»СЋС‡Р°СЏ РґРµРјРѕ) Рё РЅР°С‡Р°С‚СЊ СЃ РїСѓСЃС‚РѕР№ РїСЂРѕРіСЂР°РјРјС‹?')) return;
+    await db.transaction('rw', db.tables, async () => {
+      for (const t of db.tables) await t.clear();
+      await db.kv.put({ k: 'seeded', v: 1 });
+    });
+    location.reload();
+  };
+
+  const exportAll = async () => {
+    const dump: any = { v: 1, exportedAt: new Date().toISOString() };
+    for (const t of db.tables) dump[t.name] = await t.toArray();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(dump, null, 2)], { type: 'application/json' }));
+    a.download = `capital-os-${new Date().toISOString().slice(0, 10)}.json`; a.click();
+  };
+  const importAll = async (file: File) => {
+    const dump = JSON.parse(await file.text());
+    await db.transaction('rw', db.tables, async () => {
+      for (const t of db.tables) if (Array.isArray(dump[t.name])) { await t.clear(); await t.bulkPut(dump[t.name]); }
+    });
+    alert('РРјРїРѕСЂС‚РёСЂРѕРІР°РЅРѕ. РћР±РЅРѕРІРё СЃС‚СЂР°РЅРёС†Сѓ (F5).');
+  };
+
+  return (
+    <div>
+      <section className="card">
+        <h2>РџР°СЂР°РјРµС‚СЂС‹ РјРѕРґРµР»Рё</h2>
+        <div className="frm">
+          <label>Р РµР·РµСЂРІ (РјРµСЃ): <input type="number" step="0.5" value={f.reserveMonths ?? 1}
+            onChange={e => setF({ ...f, reserveMonths: +e.target.value })} /></label>
+          <label>РњРёРЅ. Р¶РёР·РЅСЊ в‚Ѕ/РјРµСЃ: <input type="number" value={f.manualMinBurn ?? 0}
+            onChange={e => setF({ ...f, manualMinBurn: +e.target.value })} /></label>
+          <button onClick={() => { put('reserveMonths', f.reserveMonths); put('manualMinBurn', f.manualMinBurn); }}>РЎРѕС…СЂР°РЅРёС‚СЊ</button>
+        </div>
+        <p className="muted">В«РњРёРЅ. Р¶РёР·РЅСЊВ» вЂ” СЃРєРѕР»СЊРєРѕ РјРёРЅРёРјСѓРј С‚РµР±Рµ РЅСѓР¶РЅРѕ РІ РјРµСЃСЏС† (РµРґР°, Р¶РёР»СЊС‘, СЃРІСЏР·СЊ, С‚СЂР°РЅСЃРїРѕСЂС‚). РћС‚ СЌС‚РѕР№ С†РёС„СЂС‹ СЃС‡РёС‚Р°СЋС‚СЃСЏ Runway Рё В«Р±РµР·РѕРїР°СЃРЅРѕ РїРѕС‚СЂР°С‚РёС‚СЊВ». РџСЂРѕРіСЂР°РјРјР° РїРѕС‚РѕРј СѓС‚РѕС‡РЅРёС‚ РµС‘ СЃР°РјР° РїРѕ РёСЃС‚РѕСЂРёРё С‚СЂР°С‚.</p>
+      </section>
+
+      <section className="card">
+        <h2>BTC (СЂСѓС‡РЅРѕР№ РІРІРѕРґ)</h2>
+        <div className="frm">
+          <label>Sats: <input type="number" value={f.btcSats ?? 0} onChange={e => setF({ ...f, btcSats: +e.target.value })} /></label>
+          <label>Р¦РµРЅР° в‚Ѕ/BTC: <input type="number" value={f.btcPriceRub ?? 0} onChange={e => setF({ ...f, btcPriceRub: +e.target.value })} /></label>
+          <button onClick={() => { put('btcSats', f.btcSats); put('btcPriceRub', f.btcPriceRub); }}>РЎРѕС…СЂР°РЅРёС‚СЊ</button>
+        </div>
+        <p className="muted">РљР»СЋС‡Рё Рё seed-С„СЂР°Р·С‹ РїСЂРёР»РѕР¶РµРЅРёРµ РЅРµ РїСЂРёРЅРёРјР°РµС‚ Рё РЅРµ С…СЂР°РЅРёС‚ вЂ” РїСЂРёРЅС†РёРїРёР°Р»СЊРЅРѕ.</p>
+      </section>
+
+      <section className="card">
+        <h2>РќР°С‡Р°Р»СЊРЅС‹Р№ СЃРєР»Р°Рґ (РґРµС‚Р°Р»Рё СѓР¶Рµ РµСЃС‚СЊ)</h2>
+        <InitialStock />
+      </section>
+
+      <section className="card">
+        <h2>Р”Р°РЅРЅС‹Рµ</h2>
+        <div className="actions">
+          <button className="primary" onClick={exportAll}>Р­РєСЃРїРѕСЂС‚ JSON (Р±СЌРєР°Рї)</button>
+          <label className="btn-file">РРјРїРѕСЂС‚ JSON<input type="file" accept=".json" hidden
+            onChange={e => e.target.files?.[0] && importAll(e.target.files[0])} /></label>
+          <button onClick={cleanStart}>РќР°С‡Р°С‚СЊ СЃ С‡РёСЃС‚РѕРіРѕ Р»РёСЃС‚Р°</button>
+          <button onClick={async () => { if (confirm('Р’РµСЂРЅСѓС‚СЊ РґРµРјРѕ-РґР°РЅРЅС‹Рµ?')) { await db.delete(); location.reload(); } }}>
+            Р’РµСЂРЅСѓС‚СЊ РґРµРјРѕ
+          </button>
+        </div>
+        <p className="muted">Р”Р°РЅРЅС‹Рµ Р¶РёРІСѓС‚ С‚РѕР»СЊРєРѕ РІ Р±СЂР°СѓР·РµСЂРµ СЌС‚РѕРіРѕ СѓСЃС‚СЂРѕР№СЃС‚РІР°. Р­РєСЃРїРѕСЂС‚ СЂР°Р· РІ РЅРµРґРµР»СЋ вЂ” С‚РІРѕСЏ СЃС‚СЂР°С…РѕРІРєР°.</p>
+      </section>
+    </div>);
+}
+
+function InitialStock() {
+  const [items, setItems] = useState([{ cat: 'CPU', brand: '', model: '', price: '', cond: 'USED' }]);
+  const upd = (k: number, patch: any) => setItems(items.map((x, j) => j === k ? { ...x, ...patch } : x));
+  const total = items.reduce((s, i) => s + (+i.price || 0), 0);
+  const save = async () => {
+    if (total <= 0) return;
+    const amt = toMinor(total);
+    await db.transaction('rw', [db.components, db.txs], async () => {
+      await db.components.bulkPut(items.map(i => ({
+        id: uid(), category: i.cat, brand: i.brand, model: i.model, condition: i.cond,
+        priceMinor: toMinor(+i.price), date: todayISO(), status: 'IN_STOCK', specs: {} } as Component)));
+      await db.txs.add({ id: uid(), ts: Date.now(), type: 'BUY_COMPONENTS',
+        entries: [{ acc: VIRT.INVENTORY, amt }, { acc: VIRT.EQUITY, amt: -amt }], note: 'РќР°С‡Р°Р»СЊРЅС‹Р№ СЃРєР»Р°Рґ' });
+    });
+    setItems([{ cat: 'CPU', brand: '', model: '', price: '', cond: 'USED' }]);
+  };
+  return (
+    <div>
+      {items.map((it, k) => (
+        <div key={k} className="frm">
+          <select value={it.cat} onChange={e => upd(k, { cat: e.target.value })}>{CATS.map(c => <option key={c}>{c}</option>)}</select>
+          <input placeholder="Р±СЂРµРЅРґ" value={it.brand} onChange={e => upd(k, { brand: e.target.value })} />
+          <input placeholder="РјРѕРґРµР»СЊ" value={it.model} onChange={e => upd(k, { model: e.target.value })} />
+          <input type="number" placeholder="в‚Ѕ" value={it.price} onChange={e => upd(k, { price: e.target.value })} />
+          <button onClick={() => setItems(items.filter((_, j) => j !== k))}>вњ•</button>
+        </div>))}
+      <div className="actions">
+        <button onClick={() => setItems([...items, { cat: 'CPU', brand: '', model: '', price: '', cond: 'USED' }])}>+ РїРѕР·РёС†РёСЏ</button>
+        <button className="primary" disabled={total <= 0} onClick={save}>Р’РќР•РЎРўР РќРђ РЎРљР›РђР” ({total} в‚Ѕ)</button>
+      </div>
+      <p className="muted">Р”Р»СЏ РґРµС‚Р°Р»РµР№, РєСѓРїР»РµРЅРЅС‹С… СЂР°РЅСЊС€Рµ: РїРѕРїР°РґСѓС‚ РЅР° СЃРєР»Р°Рґ Р±РµР· С„Р°Р»СЊС€РёРІРѕРіРѕ СЂР°СЃС…РѕРґР° вЂ” РєР°Рє РєР°РїРёС‚Р°Р», РєРѕС‚РѕСЂС‹Р№ СѓР¶Рµ Р±С‹Р».</p>
+    </div>);
+}
+
+==================== tests\engine.test.ts ====================
+import { describe, it, expect } from 'vitest';
+import { dealMetrics, checkCompat, hasFail, compCost } from '../src/engine/flip';
+import { computeFinance, accountBalances } from '../src/engine/finance';
+import { txSell, txAssemble, txExpense, txOpening } from '../src/engine/link';
+import { toMinor, DIM } from '../src/engine/utils';
+import { VIRT, type Build, type Tx, type Component } from '../src/types';
+
+describe('Р­РєРѕРЅРѕРјРёРєР° СЃРґРµР»РєРё (СЌС‚Р°Р»РѕРЅС‹ РўР—)', () => {
+  it('В§25: СЃРµР±РµСЃС‚РѕРёРјРѕСЃС‚СЊ 5 800 в†’ С†РµРЅР° 9 990 в†’ РїСЂРёР±С‹Р»СЊ 4 190, ROI 72.2%', () => {
+    const m = dealMetrics(toMinor(5800), toMinor(9990));
+    expect(m.profit).toBe(toMinor(4190));
+    expect(m.roiPct.toFixed(1)).toBe('72.2');
+  });
+  it('В§12.6: 6 200 + 400 РґРѕРї = 6 600 в†’ 10 000 в†’ ROI 51.5%', () => {
+    const m = dealMetrics(toMinor(6600), toMinor(10000));
+    expect(m.profit).toBe(toMinor(3400));
+    expect(m.roiPct.toFixed(1)).toBe('51.5');
+  });
+});
+
+describe('РњРѕСЃС‚ FLIP в†’ FINANCE', () => {
+  it('РїСЂРѕРґР°Р¶Р°: ОЈ РїСЂРѕРІРѕРґРѕРє = 0, РїСЂРёР±С‹Р»СЊ РїРѕРїР°РґР°РµС‚ РІ PNL, РІС‹СЂСѓС‡РєР° РІ РєР°СЃСЃСѓ', () => {
+    const t = txSell(0, 'b1', 'acc-box', toMinor(9990), toMinor(5800));
+    expect(t.entries.reduce((s, e) => s + e.amt, 0)).toBe(0);
+    expect(-(t.entries.find(e => e.acc === VIRT.PNL)!.amt)).toBe(toMinor(4190));
+    expect(accountBalances([t]).get('acc-box')).toBe(toMinor(9990));
+  });
+  it('Р·Р°РєСѓРїРєР° вЂ” РЅРµ СЂР°СЃС…РѕРґ: РґРµРЅСЊРіРё СѓС…РѕРґСЏС‚ РІ РЎРєР»Р°Рґ, PNL РЅРµ С‚СЂРѕРіР°РµС‚СЃСЏ', () => {
+    const b = accountBalances([txAssemble(0, 'b1', toMinor(5800))]);
+    expect(b.get(VIRT.WIP)).toBe(toMinor(5800));
+    expect(b.get(VIRT.PNL)).toBeUndefined();
+  });
+  it('Р»РёС‡РЅС‹Р№ СЂР°СЃС…РѕРґ РїРѕРјРµС‡Р°РµС‚ PNL; Р±РёР·РЅРµСЃ-СЂР°СЃС…РѕРґ СЃ buildId вЂ” С‚РѕР¶Рµ', () => {
+    const b = accountBalances([txExpense(0, 'acc', toMinor(500), 'c-fun')]);
+    expect(b.get(VIRT.PNL)).toBe(toMinor(500));
+  });
+});
+
+describe('РЎРѕРІРјРµСЃС‚РёРјРѕСЃС‚СЊ', () => {
+  const base: any = { ram: [], storage: [] };
+  it('DDR5 РІ DDR4 в†’ FAIL', () => {
+    const r = checkCompat({ ...base, mb: { socket: 'AM5', formFactor: 'ATX', ramType: 'DDR4' }, ram: [{ type: 'DDR5' }] });
+    expect(r.find(c => c.pair === 'RAMв†”MB')!.level).toBe('FAIL');
+  });
+  it('i7-7700 РЅР° H110 (gens:[6]) в†’ WARN, РЅРµ FAIL', () => {
+    const r = checkCompat({ ...base, cpu: { socket: 'LGA1151', generation: 7 },
+      mb: { socket: 'LGA1151', formFactor: 'MICRO_ATX', ramType: 'DDR4', gens: [6] }, ram: [{ type: 'DDR4' }] });
+    expect(r.some(c => c.level === 'WARN')).toBe(true);
+    expect(hasFail(r)).toBe(false);
+  });
+  it('PSU: (65+120+75)Г—1.2 = 312W в†’ 300 FAIL, 320 WARN, 350 OK', () => {
+    const mk = (watt: number) => checkCompat({ ...base, cpu: { socket: 'AM4', tdp: 65 },
+      gpu: { tdp: 120, conns: ['PCIe6'] }, psu: { watt, conns: ['ATX', 'PCIe6'] } });
+    expect(mk(300).find(c => c.pair === 'GPUв†”PSU')!.level).toBe('FAIL');
+    expect(mk(320).find(c => c.pair === 'GPUв†”PSU')!.level).toBe('WARN');
+    expect(mk(350).find(c => c.level === 'FAIL')).toBeUndefined();
+  });
+});
+
+describe('Р¤РёРЅР°РЅСЃРѕРІС‹Рµ РјРµС‚СЂРёРєРё: РїСЂР°РІРёР»Р°, РєРѕС‚РѕСЂС‹Рµ РЅРµ РґРѕР»Р¶РЅС‹ РІСЂР°С‚СЊ', () => {
+  const now = Date.parse('2026-10-01T12:00:00');
+  const run = (txs: Tx[]) => computeFinance({
+    accounts: [
+      { id: 'acc', name: '', kind: 'CARD', isLiquid: true, status: 'ACTIVE' },
+      { id: 'arr', name: '', kind: 'CARD', isLiquid: true, status: 'ARRESTED' }],
+    txs, streams: [
+      { id: 'g', name: '', reliability: 'GUARANTEED', coef: 1, kind: 'MONTHLY', day: 15, amountMinor: toMinor(30000) },
+      { id: 'e', name: '', reliability: 'EXPECTED', coef: 0.75, kind: 'MONTHLY', day: 15, amountMinor: toMinor(10000) }],
+    liabilities: [{ id: 'mom', name: 'РјР°РјР°', kind: 'PERSONAL', principalMinor: toMinor(6000),
+      status: 'ACTIVE', activeInCashflow: true, monthlyMinor: toMinor(2000), day: 10 }],
+    mandatoryCats: new Set(['c-home']),
+    settings: { reserveMonths: 1, expectedCoef: 0.75, manualMinBurnMinor: toMinor(15000), btcSats: 0, btcPriceRub: 0 },
+    now });
+  it('Р°СЂРµСЃС‚РѕРІР°РЅРЅС‹Р№ СЃС‡С‘С‚ РІРЅРµ Р»РёРєРІРёРґРЅРѕСЃС‚Рё', () => {
+    const m = run([txOpening(now - 40 * 864e5, 'acc', toMinor(30000)), txOpening(now - 40 * 864e5, 'arr', toMinor(12000))]);
+    expect(m.liquidMinor).toBe(toMinor(30000));
+    expect(m.arrestedMinor).toBe(toMinor(12000));
+  });
+  it('STS С‚РѕР»СЊРєРѕ РѕС‚ GUARANTEED: EXPECTED Г—0.75 вЂ” РѕС‚РґРµР»СЊРЅРѕР№ СЃС‚СЂРѕРєРѕР№', () => {
+    const m = run([txOpening(now - 40 * 864e5, 'acc', toMinor(30000))]);
+    expect(m.daysToIncome).toBe(14);                              // 1 в†’ 15 РѕРєС‚СЏР±СЂСЏ
+    expect(m.essentialMinor).toBe(Math.round((toMinor(15000) * 14) / DIM));
+    expect(m.committedMinor).toBe(toMinor(2000));                 // РїР»Р°С‚С‘Р¶ РјР°РјРµ 10-РіРѕ РґРѕ РґРѕС…РѕРґР°
+    expect(m.stsMinor).toBe(toMinor(30000) - m.essentialMinor - toMinor(2000));
+    expect(m.stsaveMinor).toBe(m.stsMinor - toMinor(15000));
+    expect(m.expectedFlowMinor).toBe(toMinor(7500));              // 10 000 Г— 0.75 вЂ” РќР• РІ STS
+  });
+});
+
+==================== tsconfig.json ====================
+{
+  "compilerOptions": {
+    "target": "ES2022", "module": "ESNext", "moduleResolution": "bundler",
+    "jsx": "react-jsx", "strict": true, "skipLibCheck": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"], "types": ["vite/client"], "noEmit": true
+  },
+  "include": ["src", "tests"]
+}
+
+==================== vite.config.ts ====================
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  base: '/CapitalOS/',
+  plugins: [react()],
+  server: { watch: { ignored: ['**/all_files.txt'] } },
+});
+
