@@ -28,8 +28,8 @@ export default function Finance() {
         <h2>Счета</h2>
         {real.map(a => <div key={a.id} className="row">
           <span>{a.name} {a.status === 'ARRESTED' ? '· 🔒 арест' : ''}</span><b>{fmtMinor(d.bal.get(a.id) ?? 0)}</b></div>)}
-        <div className="row muted"><span>Накопленный результат (PNL)</span><b>{fmtMinor(-(d.bal.get(VIRT.PNL) ?? 0))}</b></div>
-        <h3>Добавить счёт</h3>
+        <div className="row muted"><span>Итог операций мастерской</span><b>{fmtMinor(-(d.bal.get(VIRT.PNL) ?? 0))}</b></div>
+        <h3>Добавить свой счёт</h3>
         <AccountForm />
       </section>
 
@@ -44,25 +44,25 @@ export default function Finance() {
           </select>
           {type === 'TRANSFER' && (
             <select value={toAcc} onChange={e => setToAcc(e.target.value)}>
-              <option value="">→ куда</option>
+              <option value="">Выберите счёт-получатель</option>
               {real.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
             </select>)}
           <input type="number" placeholder="₽" value={amt} onChange={e => setAmt(e.target.value)} />
           {type !== 'TRANSFER' && (
             <select value={cat} onChange={e => setCat(e.target.value)}>
-              <option value="">категория</option>
+              <option value="">Выберите категорию</option>
               {d.cats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>)}
-          <input placeholder="заметка" value={note} onChange={e => setNote(e.target.value)} />
-          <button className="primary" onClick={save}>OK</button>
+          <input placeholder="Например, продукты или поездка" value={note} onChange={e => setNote(e.target.value)} />
+          <button className="primary" onClick={save}>Добавить</button>
         </div>
-        <p className="muted">Покупка комплектующих — не здесь, а в «Мастерской»: проводка создаётся сама.</p>
+        <p className="muted">Покупки для мастерской удобнее добавить в разделе «Мастерская» — расходы учтутся автоматически.</p>
       </section>
 
       <section className="card">
         <h2>Потоки дохода</h2>
         {d.streams.map(s => <div key={s.id} className="row">
-          <span>{s.name} · {s.reliability}{s.reliability === 'EXPECTED' ? ` ×${s.coef}` : ''}{s.day ? ` · ${s.day}-е` : ''}</span>
+          <span>{s.name} · {{ GUARANTEED: 'Надёжный', EXPECTED: 'Ожидаемый', POSSIBLE: 'Возможный' }[s.reliability]}{s.reliability === 'EXPECTED' ? ` · учтено ${Math.round(s.coef * 100)}%` : ''}{s.day ? ` · ${s.day}-е число` : ''}</span>
           <b>{fmtMinor(s.amountMinor)}</b></div>)}
         <StreamForm />
       </section>
@@ -92,15 +92,15 @@ function AccountForm() {
   };
   return (
     <div className="frm">
-      <input placeholder="название (напр. Мой банк)" value={f.name} onChange={e => setF({ ...f, name: e.target.value })} />
+      <input placeholder="Например, карта основного банка" value={f.name} onChange={e => setF({ ...f, name: e.target.value })} />
       <select value={f.kind} onChange={e => setF({ ...f, kind: e.target.value })}>
         <option value="CARD">Карта</option><option value="CASH">Наличные</option>
         <option value="SAVINGS">Накопительный</option><option value="CASHBOX">Касса бизнеса</option>
       </select>
-      <input type="number" placeholder="остаток сейчас ₽" value={f.open} onChange={e => setF({ ...f, open: e.target.value })} />
+      <input type="number" placeholder="Сколько денег сейчас, ₽" value={f.open} onChange={e => setF({ ...f, open: e.target.value })} />
       <label className="muted"><input type="checkbox" checked={f.arrested}
-        onChange={e => setF({ ...f, arrested: e.target.checked })} /> арестован</label>
-      <button onClick={save}>+</button>
+        onChange={e => setF({ ...f, arrested: e.target.checked })} /> Счёт временно недоступен</label>
+      <button onClick={save}>Добавить счёт</button>
     </div>
   );
 }
@@ -116,13 +116,13 @@ function StreamForm() {
     setF({ ...f, name: '', amt: '' });
   };
   return <div className="frm">
-    <input placeholder="название" value={f.name} onChange={e => setF({ ...f, name: e.target.value })} />
+    <input placeholder="Например, зарплата" value={f.name} onChange={e => setF({ ...f, name: e.target.value })} />
     <select value={f.rel} onChange={e => setF({ ...f, rel: e.target.value as Reliability })}>
-      <option>GUARANTEED</option><option>EXPECTED</option><option>POSSIBLE</option>
+      <option value="GUARANTEED">Надёжный доход</option><option value="EXPECTED">Ожидаемый доход</option><option value="POSSIBLE">Возможный доход</option>
     </select>
     <input type="number" placeholder="₽/мес" value={f.amt} onChange={e => setF({ ...f, amt: e.target.value })} />
     <input type="number" placeholder="день" value={f.day} onChange={e => setF({ ...f, day: e.target.value })} />
-    <button onClick={save}>+</button>
+    <button onClick={save}>Добавить доход</button>
   </div>;
 }
 
@@ -136,12 +136,12 @@ function LiabForm() {
     setF({ ...f, name: '', amt: '', mon: '' });
   };
   return <div className="frm">
-    <input placeholder="название" value={f.name} onChange={e => setF({ ...f, name: e.target.value })} />
-    <input type="number" placeholder="долг ₽" value={f.amt} onChange={e => setF({ ...f, amt: e.target.value })} />
-    <input type="number" placeholder="₽/мес" value={f.mon} onChange={e => setF({ ...f, mon: e.target.value })} />
-    <input type="number" placeholder="день" value={f.day} onChange={e => setF({ ...f, day: e.target.value })} />
+    <input placeholder="Например, кредит" value={f.name} onChange={e => setF({ ...f, name: e.target.value })} />
+    <input type="number" placeholder="Остаток долга, ₽" value={f.amt} onChange={e => setF({ ...f, amt: e.target.value })} />
+    <input type="number" placeholder="Платёж в месяц, ₽" value={f.mon} onChange={e => setF({ ...f, mon: e.target.value })} />
+    <input type="number" placeholder="День платежа" value={f.day} onChange={e => setF({ ...f, day: e.target.value })} />
     <label className="muted"><input type="checkbox" checked={f.frozen}
-      onChange={e => setF({ ...f, frozen: e.target.checked })} /> в процедуре</label>
-    <button onClick={save}>+</button>
+      onChange={e => setF({ ...f, frozen: e.target.checked })} /> Платёж пока не учитывать</label>
+    <button onClick={save}>Добавить обязательство</button>
   </div>;
 }

@@ -5,7 +5,11 @@ import { VIRT, type Component, type CompCat } from '../types';
 import { toMinor, uid, todayISO } from '../engine/utils';
 
 const CATS: CompCat[] = ['CPU', 'MB', 'RAM', 'GPU', 'STORAGE', 'PSU', 'CASE', 'COOLER'];
-const ACCENTS = { blue: '#3daee9', green: '#59ad72', purple: '#8e75d8', amber: '#d9a441' } as const;
+const CAT_LABELS: Record<CompCat, string> = {
+  CPU: 'Процессор', MB: 'Материнская плата', RAM: 'Оперативная память', GPU: 'Видеокарта',
+  STORAGE: 'Накопитель', PSU: 'Блок питания', CASE: 'Корпус', COOLER: 'Охлаждение',
+};
+const ACCENTS = { blue: '#3daee9', green: '#57b879', purple: '#8e75d8', amber: '#d9a441' } as const;
 const ACCENT_LABELS = { blue: 'Синий', green: 'Зелёный', purple: 'Фиолетовый', amber: 'Янтарный' } as const;
 type Accent = keyof typeof ACCENTS;
 type Density = 'compact' | 'comfortable' | 'spacious';
@@ -62,7 +66,7 @@ export default function Settings() {
   const put = async (k: string, v: any) => db.kv.put({ k, v });
 
   const cleanStart = async () => {
-    if (!confirm('Удалить ВСЕ данные (включая демо) и начать с пустой программы?')) return;
+    if (!confirm('Удалить все данные, в том числе демо, и начать заново? Перед этим убедитесь, что у вас есть резервная копия.')) return;
     await db.transaction('rw', db.tables, async () => {
       for (const t of db.tables) await t.clear();
       await db.kv.put({ k: 'seeded', v: 1 });
@@ -82,7 +86,7 @@ export default function Settings() {
     await db.transaction('rw', db.tables, async () => {
       for (const t of db.tables) if (Array.isArray(dump[t.name])) { await t.clear(); await t.bulkPut(dump[t.name]); }
     });
-    alert('Импортировано. Обнови страницу (F5).');
+    alert('Данные загружены. Обновите страницу, чтобы увидеть изменения.');
   };
 
   return (
@@ -91,23 +95,23 @@ export default function Settings() {
       <section className="card">
         <h2>Параметры модели</h2>
         <div className="frm">
-          <label>Резерв (мес): <input type="number" step="0.5" value={f.reserveMonths ?? 1}
+          <label>Запас на чёрный день (мес.): <input type="number" step="0.5" value={f.reserveMonths ?? 1}
             onChange={e => setF({ ...f, reserveMonths: +e.target.value })} /></label>
-          <label>Мин. жизнь ₽/мес: <input type="number" value={f.manualMinBurn ?? 0}
+          <label>Необходимые расходы в месяц, ₽: <input type="number" value={f.manualMinBurn ?? 0}
             onChange={e => setF({ ...f, manualMinBurn: +e.target.value })} /></label>
           <button onClick={() => { put('reserveMonths', f.reserveMonths); put('manualMinBurn', f.manualMinBurn); }}>Сохранить</button>
         </div>
-        <p className="muted">«Мин. жизнь» — сколько минимум тебе нужно в месяц (еда, жильё, связь, транспорт). От этой цифры считаются Runway и «безопасно потратить». Программа потом уточнит её сама по истории трат.</p>
+        <p className="muted">Укажите сумму на самое необходимое: жильё, еду, связь и транспорт. Она поможет оценить, на сколько хватит денег и сколько можно потратить без ущерба для запаса.</p>
       </section>
 
       <section className="card">
-        <h2>BTC (ручной ввод)</h2>
+        <h2>Биткоин (ввести вручную)</h2>
         <div className="frm">
-          <label>Sats: <input type="number" value={f.btcSats ?? 0} onChange={e => setF({ ...f, btcSats: +e.target.value })} /></label>
-          <label>Цена ₽/BTC: <input type="number" value={f.btcPriceRub ?? 0} onChange={e => setF({ ...f, btcPriceRub: +e.target.value })} /></label>
+          <label>Количество сатоши: <input type="number" value={f.btcSats ?? 0} onChange={e => setF({ ...f, btcSats: +e.target.value })} /></label>
+          <label>Цена биткоина, ₽: <input type="number" value={f.btcPriceRub ?? 0} onChange={e => setF({ ...f, btcPriceRub: +e.target.value })} /></label>
           <button onClick={() => { put('btcSats', f.btcSats); put('btcPriceRub', f.btcPriceRub); }}>Сохранить</button>
         </div>
-        <p className="muted">Ключи и seed-фразы приложение не принимает и не хранит — принципиально.</p>
+        <p className="muted">Приложение только показывает оценку. Оно не запрашивает и не хранит ключи или фразы восстановления.</p>
       </section>
 
       <section className="card">
@@ -118,15 +122,15 @@ export default function Settings() {
       <section className="card">
         <h2>Данные</h2>
         <div className="actions">
-          <button className="primary" onClick={exportAll}>Экспорт JSON (бэкап)</button>
-          <label className="btn-file">Импорт JSON<input type="file" accept=".json" hidden
+          <button className="primary" onClick={exportAll}>Скачать резервную копию</button>
+          <label className="btn-file">Загрузить копию<input type="file" accept=".json" hidden
             onChange={e => e.target.files?.[0] && importAll(e.target.files[0])} /></label>
-          <button onClick={cleanStart}>Начать с чистого листа</button>
-          <button onClick={async () => { if (confirm('Вернуть демо-данные?')) { await db.delete(); location.reload(); } }}>
-            Вернуть демо
+          <button onClick={cleanStart}>Удалить все данные</button>
+          <button onClick={async () => { if (confirm('Заменить текущие данные демонстрационными? Сначала скачайте резервную копию, если хотите их сохранить.')) { await db.delete(); location.reload(); } }}>
+            Показать демо-данные
           </button>
         </div>
-        <p className="muted">Данные живут только в браузере этого устройства. Экспорт раз в неделю — твоя страховка.</p>
+        <p className="muted">Данные хранятся только в браузере на этом устройстве. Скачайте копию, чтобы не потерять их при смене устройства или очистке браузера.</p>
       </section>
     </div>);
 }
@@ -151,16 +155,16 @@ function InitialStock() {
     <div>
       {items.map((it, k) => (
         <div key={k} className="frm">
-          <select value={it.cat} onChange={e => upd(k, { cat: e.target.value })}>{CATS.map(c => <option key={c}>{c}</option>)}</select>
-          <input placeholder="бренд" value={it.brand} onChange={e => upd(k, { brand: e.target.value })} />
-          <input placeholder="модель" value={it.model} onChange={e => upd(k, { model: e.target.value })} />
+          <select value={it.cat} onChange={e => upd(k, { cat: e.target.value })}>{CATS.map(c => <option key={c} value={c}>{CAT_LABELS[c]}</option>)}</select>
+          <input placeholder="Производитель" value={it.brand} onChange={e => upd(k, { brand: e.target.value })} />
+          <input placeholder="Модель" value={it.model} onChange={e => upd(k, { model: e.target.value })} />
           <input type="number" placeholder="₽" value={it.price} onChange={e => upd(k, { price: e.target.value })} />
           <button onClick={() => setItems(items.filter((_, j) => j !== k))}>✕</button>
         </div>))}
       <div className="actions">
-        <button onClick={() => setItems([...items, { cat: 'CPU', brand: '', model: '', price: '', cond: 'USED' }])}>+ позиция</button>
-        <button className="primary" disabled={total <= 0} onClick={save}>ВНЕСТИ НА СКЛАД ({total} ₽)</button>
+        <button onClick={() => setItems([...items, { cat: 'CPU', brand: '', model: '', price: '', cond: 'USED' }])}>＋ Добавить деталь</button>
+        <button className="primary" disabled={total <= 0} onClick={save}>Добавить на склад ({total} ₽)</button>
       </div>
-      <p className="muted">Для деталей, купленных раньше: попадут на склад без фальшивого расхода — как капитал, который уже был.</p>
+      <p className="muted">Добавьте сюда детали, которые уже были у вас. Они появятся на складе без новой траты: их стоимость уже входит в ваш капитал.</p>
     </div>);
 }

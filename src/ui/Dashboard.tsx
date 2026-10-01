@@ -6,13 +6,13 @@ import { VIRT, type Liability, type Tx } from '../types';
 import type { Metrics } from '../engine/finance';
 
 const WIDGETS = [
-  { id: 'capital', title: 'NET CAPITAL', kicker: 'КАПИТАЛ' },
-  { id: 'safe', title: 'SAFE TO SPEND', kicker: 'ЛИКВИДНОСТЬ' },
-  { id: 'flow', title: 'CAPITAL FLOW', kicker: 'ДЕНЕЖНЫЙ ПОТОК' },
-  { id: 'btc', title: 'BTC POSITION', kicker: 'ЦИФРОВЫЕ АКТИВЫ' },
-  { id: 'workshop', title: 'МАСТЕРСКАЯ', kicker: 'ОПЕРАЦИИ' },
-  { id: 'recent', title: 'ПОСЛЕДНИЕ ОПЕРАЦИИ', kicker: 'ЖУРНАЛ' },
-  { id: 'payments', title: 'БЛИЖАЙШЕЕ', kicker: 'РАСПИСАНИЕ' },
+  { id: 'capital', title: 'Чистый капитал', kicker: 'МОИ ФИНАНСЫ' },
+  { id: 'safe', title: 'Можно потратить', kicker: 'СЕЙЧАС' },
+  { id: 'flow', title: 'Доходы и расходы', kicker: 'ЗА МЕСЯЦ' },
+  { id: 'btc', title: 'Позиция в BTC', kicker: 'ЦИФРОВЫЕ АКТИВЫ' },
+  { id: 'workshop', title: 'Мастерская', kicker: 'МОЁ ДЕЛО' },
+  { id: 'recent', title: 'Недавние операции', kicker: 'ИСТОРИЯ' },
+  { id: 'payments', title: 'Что дальше', kicker: 'БЛИЖАЙШИЕ СОБЫТИЯ' },
 ] as const;
 type WidgetId = (typeof WIDGETS)[number]['id'];
 type Layout = { widgets: WidgetId[]; wide: WidgetId[]; pinned: WidgetId[] };
@@ -22,8 +22,8 @@ const DEFAULT_LAYOUT: Layout = {
   pinned: [],
 };
 const LAYOUT_KEY = 'capital-os-dashboard-layout-v1';
-const CHART_RANGES = [{ label: '7D', days: 7 }, { label: '30D', days: 30 }, { label: '90D', days: 90 },
-  { label: '1Y', days: 365 }, { label: 'ALL', days: 0 }];
+const CHART_RANGES = [{ label: '7 дн.', days: 7 }, { label: '30 дн.', days: 30 }, { label: '90 дн.', days: 90 },
+  { label: '1 год', days: 365 }, { label: 'Всё время', days: 0 }];
 
 function readLayout(): Layout {
   try {
@@ -129,7 +129,7 @@ export default function Dashboard({ go }: { go: (t: any) => void }) {
     if (id === 'capital') return <>
       <div className="metric-value">{fmtMinor(m.totalMinor)}</div>
       <div className={`metric-delta ${capitalChange < 0 ? 'negative' : ''}`}>
-        <span>{capitalChange >= 0 ? '↗' : '↘'}</span>{capitalChange >= 0 ? '+' : ''}{fmtMinor(capitalChange)} · {fmtPct(capitalChangePct)} · {range ? `${range} DAYS` : 'ALL TIME'}
+        <span>{capitalChange >= 0 ? '↗' : '↘'}</span>{capitalChange >= 0 ? '+' : ''}{fmtMinor(capitalChange)} · {fmtPct(capitalChangePct)} · {range ? `${range} дн.` : 'за всё время'}
       </div>
       <svg className="capital-chart" viewBox="0 0 100 40" preserveAspectRatio="none" role="img" aria-label="История капитала">
         <line x1="0" y1="34.5" x2="100" y2="34.5" /><polyline points={points} />
@@ -139,13 +139,13 @@ export default function Dashboard({ go }: { go: (t: any) => void }) {
         {CHART_RANGES.map(item => <button key={item.label} className={range === item.days ? 'selected' : ''} onClick={() => setRange(item.days)}>{item.label}</button>)}
       </div>
       <div className="widget-detail"><span>Ликвидность</span><strong>{fmtMinor(m.liquidMinor)}</strong></div>
-      <div className="widget-detail"><span>Net worth · полный</span><strong>{fmtMinor(m.netWorthFullMinor)}</strong></div>
+      <div className="widget-detail"><span>Капитал с учётом всех долгов</span><strong>{fmtMinor(m.netWorthFullMinor)}</strong></div>
     </>;
 
     if (id === 'safe') return <>
       <div className="safe-layout"><div><div className="metric-value">{fmtMinor(m.stsMinor)}</div><div className="metric-caption">Доступно без учёта ожидаемых доходов</div></div>
         <div className="safe-days"><strong>{fmtDays(m.daysToIncome)}</strong><span>до дохода</span></div></div>
-      <div className="widget-detail"><span>Следующий обязательный платёж</span><strong>{due ? fmtMinor(due.amount) : 'Нет в расписании'}</strong></div>
+      <div className="widget-detail"><span>Ближайший обязательный платёж</span><strong>{due ? fmtMinor(due.amount) : 'Пока не добавлен'}</strong></div>
       {due && <div className="widget-detail"><span>{due.name}</span><strong>{due.date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })} · через {due.days} дн.</strong></div>}
       <button className="text-action" onClick={() => go('fin')}>Расчёт и счета →</button>
     </>;
@@ -177,14 +177,14 @@ export default function Dashboard({ go }: { go: (t: any) => void }) {
         <div className="btc-position">{(sats / 1e8).toFixed(8)} BTC<small>Текущая позиция</small></div>
         <div className="btc-stat-grid"><div className="btc-stat"><span>Стоимость</span><strong>{m.btcMinor ? fmtMinor(m.btcMinor) : '—'}</strong></div>
           <div className="btc-stat"><span>Доля капитала</span><strong>{m.btcMinor ? fmtPct(allocation) : '—'}</strong></div></div>
-        <div className="widget-detail"><span>P/L</span><strong>— · себестоимость не задана</strong></div>
-        <button className="text-action" onClick={() => setShowScenarios(value => !value)}>{showScenarios ? 'Скрыть сценарии ↑' : 'Разбор сценариев →'}</button>
+        <div className="widget-detail"><span>Прибыль или убыток</span><strong>— · себестоимость не задана</strong></div>
+        <button className="text-action" onClick={() => setShowScenarios(value => !value)}>{showScenarios ? 'Скрыть сценарии ↑' : 'Посмотреть варианты →'}</button>
         {showScenarios && <div className="scenario-wrap"><table className="scenario-table"><thead><tr><th>Сценарий</th><th>Цена BTC</th><th>Позиция</th><th>Δ</th></tr></thead>
           <tbody>{[-30, -20, -10, 0, 10, 20, 50].map(percent => <tr key={percent}><td>{percent > 0 ? '+' : ''}{percent}%</td>
             <td>{price > 0 ? fmtMinor(toMinor(price * (1 + percent / 100))) : '—'}</td>
             <td>{m.btcMinor ? fmtMinor(Math.round(m.btcMinor * (1 + percent / 100))) : '—'}</td>
             <td>{m.btcMinor ? fmtMinor(Math.round(m.btcMinor * percent / 100)) : '—'}</td></tr>)}</tbody></table>
-          <div className="metric-caption">Сценарии изменения цены, не прогноз.</div></div>}
+          <div className="metric-caption">Это варианты изменения цены, а не прогноз.</div></div>}
       </>;
     }
 
@@ -225,7 +225,7 @@ export default function Dashboard({ go }: { go: (t: any) => void }) {
   return (
     <div className="dashboard">
       {d.mismatch && <div className="warn">Сверка: баланс счетов расходится со складом или сборками. Проверьте операции.</div>}
-      <div className="dashboard-toolbar"><span className="dashboard-status">Локальная финансовая система <span>·</span> данные обновлены сейчас</span>
+      <div className="dashboard-toolbar"><span className="dashboard-status">Всё на своих местах <span>·</span> данные обновляются автоматически</span>
         <div className="dashboard-toolbar-actions">{editing ? <>
           <select aria-label="Добавить виджет" value="" onChange={event => {
             const id = event.target.value as WidgetId;
@@ -277,8 +277,8 @@ function WhatIf({ m }: { m: Metrics }) {
       <input aria-label="Сумма сценария" type="number" min="0" value={rub} onChange={event => setRub(+event.target.value)} /><span>₽</span></div>
     <table className="tbl"><thead><tr><th></th><th>До</th><th>После</th></tr></thead><tbody>
       <tr><td>Ликвидные</td><td>{fmtMinor(m.liquidMinor)}</td><td>{fmtMinor(liquid)}</td></tr>
-      <tr><td>Safe to Spend</td><td>{fmtMinor(before.sts)}</td><td>{fmtMinor(after.sts)}</td></tr>
-      <tr><td>Runway</td><td>{fmtDays(before.runway)}</td><td>{fmtDays(after.runway)}</td></tr>
+      <tr><td>Можно потратить</td><td>{fmtMinor(before.sts)}</td><td>{fmtMinor(after.sts)}</td></tr>
+      <tr><td>На сколько хватит денег</td><td>{fmtDays(before.runway)}</td><td>{fmtDays(after.runway)}</td></tr>
     </tbody></table>
   </section>;
 }

@@ -7,15 +7,16 @@ import { useData } from './hooks';
 import { fmtMinor } from './engine/utils';
 
 const NAV = [
-  { group: 'WORKSPACE', items: [{ id: 'dash', label: 'Обзор', icon: '▦' }] },
-  { group: 'MONEY', items: [{ id: 'fin', label: 'Счета и операции', icon: '◉' }] },
-  { group: 'OPERATIONS', items: [{ id: 'flip', label: 'Мастерская', icon: '▰' }] },
-  { group: 'SYSTEM', items: [{ id: 'set', label: 'Настройки', icon: '⚙' }] },
+  { group: 'МОЁ ПРОСТРАНСТВО', items: [{ id: 'dash', label: 'Обзор', icon: '▦' }] },
+  { group: 'ФИНАНСЫ', items: [{ id: 'fin', label: 'Счета и операции', icon: '◉' }] },
+  { group: 'ДЕЛО', items: [{ id: 'flip', label: 'Мастерская', icon: '▰' }] },
+  { group: 'ПРИЛОЖЕНИЕ', items: [{ id: 'set', label: 'Настройки', icon: '⚙' }] },
 ] as const;
 type Section = (typeof NAV)[number]['items'][number]['id'];
 type SearchResult = { label: string; detail: string; section: Section };
+const NAV_LABELS: Record<Section, string> = { dash: 'Обзор', fin: 'Счета и операции', flip: 'Мастерская', set: 'Настройки' };
 const TITLES: Record<Section, string> = {
-  dash: 'Рабочая среда', fin: 'Счета и операции', flip: 'Мастерская', set: 'Настройки системы',
+  dash: 'Ваш обзор', fin: 'Счета и операции', flip: 'Мастерская', set: 'Настройки',
 };
 
 export default function App() {
@@ -50,20 +51,21 @@ export default function App() {
       { label: 'Счета и операции', detail: 'Баланс, доходы и расходы', section: 'fin' },
       { label: 'Мастерская', detail: 'Склад и сборки', section: 'flip' },
       { label: 'Настройки', detail: 'Параметры и резервные копии', section: 'set' },
-      { label: 'Safe to Spend', detail: `Доступно ${fmtMinor(d.m.stsMinor)}`, section: 'dash' },
+      { label: 'Можно потратить', detail: `Доступно ${fmtMinor(d.m.stsMinor)}`, section: 'dash' },
       { label: 'BTC', detail: d.m.btcMinor ? fmtMinor(d.m.btcMinor) : 'Позиция не настроена', section: 'dash' },
       ...d.accounts.map(account => ({ label: account.name, detail: `Счёт · ${fmtMinor(d.bal.get(account.id) ?? 0)}`, section: 'fin' as Section })),
       ...d.cats.map(category => ({ label: category.name, detail: 'Категория операций', section: 'fin' as Section })),
       ...[...d.txs].sort((a, b) => b.ts - a.ts).slice(0, 60).map<SearchResult>(tx => {
+        const typeLabel = ({ INCOME: 'Доход', EXPENSE: 'Расход', TRANSFER: 'Перевод', BUY_COMPONENTS: 'Покупка деталей',
+          ASSEMBLE: 'Сборка', SELL_BUILD: 'Продажа', DRAW: 'Вывод денег', ADJUST: 'Корректировка' } as const)[tx.type];
         const entries = tx.entries.filter(entry => !entry.acc.startsWith('virt:'));
         const amount = tx.type === 'TRANSFER' ? Math.max(0, ...entries.map(entry => entry.amt))
           : entries.length ? entries.reduce((sum, entry) => sum + entry.amt, 0)
           : Math.max(0, ...tx.entries.map(entry => Math.abs(entry.amt)));
         const absoluteAmount = Math.abs(amount);
         return {
-          label: tx.note || ({ INCOME: 'Доход', EXPENSE: 'Расход', TRANSFER: 'Перевод', BUY_COMPONENTS: 'Закупка',
-            ASSEMBLE: 'Сборка', SELL_BUILD: 'Продажа', DRAW: 'Вывод', ADJUST: 'Корректировка' }[tx.type]),
-          detail: `${new Date(tx.ts).toLocaleDateString('ru-RU')} · ${tx.categoryId ? d.cats.find(c => c.id === tx.categoryId)?.name ?? '' : tx.type} · ${fmtMinor(absoluteAmount)} ${Math.floor(absoluteAmount / 100)}`,
+          label: tx.note || typeLabel,
+          detail: `${new Date(tx.ts).toLocaleDateString('ru-RU')} · ${tx.categoryId ? d.cats.find(c => c.id === tx.categoryId)?.name ?? typeLabel : typeLabel} · ${fmtMinor(absoluteAmount)}`,
           section: tx.type === 'BUY_COMPONENTS' || tx.type === 'ASSEMBLE' || tx.type === 'SELL_BUILD' ? 'flip' : 'fin',
         };
       }),
@@ -81,7 +83,7 @@ export default function App() {
   return (
     <div className={`app ${collapsed ? 'is-collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
       <aside className="sidebar">
-        <div className="brand-lockup"><span className="brand-mark">C</span><span className="brand-name">CAPITAL OS<small>PERSONAL FINANCE</small></span></div>
+        <div className="brand-lockup"><span className="brand-mark">C</span><span className="brand-name">CAPITAL OS<small>ЛИЧНЫЕ ФИНАНСЫ</small></span></div>
         <nav className="side-nav" aria-label="Основная навигация">
           {NAV.map(group => <div className="nav-group" key={group.group}>
             <div className="nav-group-label">{group.group}</div>
@@ -91,7 +93,7 @@ export default function App() {
             </button>)}
           </div>)}
         </nav>
-        <div className="sidebar-bottom"><span className="status-dot" /> Локальная база данных</div>
+        <div className="sidebar-bottom"><span className="status-dot" /> Данные хранятся у вас</div>
       </aside>
       {mobileOpen && <button className="sidebar-scrim" aria-label="Закрыть навигацию" onClick={() => setMobileOpen(false)} />}
 
@@ -106,8 +108,8 @@ export default function App() {
           </div>
         </header>
         <main className="main-view">
-          <div className="page-heading"><div><div className="eyebrow">CAPITAL OS <span>/</span> {tab.toUpperCase()}</div><h1>{TITLES[tab]}</h1></div>
-            <button className="primary heading-action" onClick={() => chooseSection('fin')}><span aria-hidden="true">＋</span> Новая операция</button>
+          <div className="page-heading"><div><div className="eyebrow">ВАШИ ФИНАНСЫ <span>/</span> {NAV_LABELS[tab].toLocaleUpperCase('ru')}</div><h1>{TITLES[tab]}</h1></div>
+            <button className="primary heading-action" onClick={() => chooseSection('fin')}><span aria-hidden="true">＋</span> Добавить операцию</button>
           </div>
           {tab === 'dash' && <Dashboard go={chooseSection} />}
           {tab === 'fin' && <Finance />}
@@ -127,7 +129,7 @@ export default function App() {
               <span className="result-copy"><strong>{item.label}</strong><small>{item.detail}</small></span><span className="result-enter">↵</span></button>)
               : <div className="empty-search">Ничего не найдено</div>}
           </div>
-          <footer className="command-footer"><span>Переход к разделу или данным</span><span><kbd>Ctrl K</kbd> открыть поиск</span></footer>
+          <footer className="command-footer"><span>Найдите раздел, счёт или операцию</span><span><kbd>Ctrl K</kbd> открыть поиск</span></footer>
         </section>
       </div>}
     </div>

@@ -7,6 +7,17 @@ import { fmtMinor, fmtPct, toMinor, uid, todayISO, type Minor } from '../engine/
 import type { Account, Build, Component, CompCat } from '../types';
 
 const CATS: CompCat[] = ['CPU', 'MB', 'RAM', 'GPU', 'STORAGE', 'PSU', 'CASE', 'COOLER'];
+const CAT_LABELS: Record<CompCat, string> = {
+  CPU: 'Процессор', MB: 'Материнская плата', RAM: 'Оперативная память', GPU: 'Видеокарта',
+  STORAGE: 'Накопитель', PSU: 'Блок питания', CASE: 'Корпус', COOLER: 'Охлаждение',
+};
+const CONDITION_LABELS = { NEW: 'Новая', USED: 'Б/у', REFURB: 'Восстановленная', UNKNOWN: 'Не указано' } as const;
+const PAIR_LABELS: Record<string, string> = {
+  'CPU↔MB': 'Процессор и материнская плата', 'RAM↔MB': 'Память и материнская плата',
+  'MB↔Case': 'Материнская плата и корпус', 'GPU↔PSU': 'Видеокарта и блок питания',
+  'GPU↔Case': 'Видеокарта и корпус', 'Cooler↔CPU': 'Кулер и процессор',
+  'Cooler↔Case': 'Кулер и корпус', 'Storage↔MB': 'Накопители и материнская плата',
+};
 
 export default function Flip() {
   const [tab, setTab] = useState<'stock' | 'buy' | 'build'>('stock');
@@ -19,9 +30,9 @@ export default function Flip() {
   return (
     <div>
       <div className="actions">
-        <button className={tab === 'stock' ? 'on' : ''} onClick={() => setTab('stock')}>Склад / Сборки</button>
-        <button className={tab === 'buy' ? 'on' : ''} onClick={() => setTab('buy')}>+ ЗАКУПКА</button>
-        <button className={tab === 'build' ? 'on' : ''} onClick={() => setTab('build')}>КОНФИГУРАТОР</button>
+        <button className={tab === 'stock' ? 'on' : ''} onClick={() => setTab('stock')}>Склад и сборки</button>
+        <button className={tab === 'buy' ? 'on' : ''} onClick={() => setTab('buy')}>＋ Добавить покупку</button>
+        <button className={tab === 'build' ? 'on' : ''} onClick={() => setTab('build')}>Собрать компьютер</button>
       </div>
       {tab === 'stock' && <Stock comps={comps} builds={builds} byId={byId} boxAcc={boxAcc} />}
       {tab === 'buy' && <PurchaseForm accounts={accounts} />}
@@ -52,25 +63,25 @@ function PurchaseForm({ accounts }: { accounts: Account[] }) {
 
   return (
     <div className="card">
-      <h3>Новая закупка</h3>
-      <input placeholder="Продавец" value={seller} onChange={e => setSeller(e.target.value)} />
+      <h3>Добавим детали на склад</h3>
+      <input placeholder="У кого купили (необязательно)" value={seller} onChange={e => setSeller(e.target.value)} />
       <select value={accId} onChange={e => setPayAcc(e.target.value)}>
         {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
       </select>
       {items.map((it, k) => (
         <div key={k} className="frm">
-          <select value={it.cat} onChange={e => upd(k, { cat: e.target.value })}>{CATS.map(c => <option key={c}>{c}</option>)}</select>
-          <input placeholder="бренд" value={it.brand} onChange={e => upd(k, { brand: e.target.value })} />
-          <input placeholder="модель" value={it.model} onChange={e => upd(k, { model: e.target.value })} />
+          <select value={it.cat} onChange={e => upd(k, { cat: e.target.value })}>{CATS.map(c => <option key={c} value={c}>{CAT_LABELS[c]}</option>)}</select>
+          <input placeholder="Производитель" value={it.brand} onChange={e => upd(k, { brand: e.target.value })} />
+          <input placeholder="Модель" value={it.model} onChange={e => upd(k, { model: e.target.value })} />
           <select value={it.cond} onChange={e => upd(k, { cond: e.target.value })}>
-            <option>NEW</option><option>USED</option><option>REFURB</option><option>UNKNOWN</option>
+            {Object.entries(CONDITION_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
           <input type="number" placeholder="₽" value={it.price} onChange={e => upd(k, { price: e.target.value })} />
           <button onClick={() => setItems(items.filter((_, j) => j !== k))}>✕</button>
         </div>))}
-      <button onClick={() => setItems([...items, { cat: 'CPU', brand: '', model: '', price: '', cond: 'USED' }])}>+ позиция</button>
-      <div>Итого: <b>{fmtMinor(toMinor(total))}</b> · Сумма позиций = чек (комплект просто разбивай на строки)</div>
-      <button className="primary" disabled={total <= 0} onClick={save}>СОХРАНИТЬ ЗАКУПКУ</button>
+      <button onClick={() => setItems([...items, { cat: 'CPU', brand: '', model: '', price: '', cond: 'USED' }])}>＋ Добавить деталь</button>
+      <div>Сумма покупки: <b>{fmtMinor(toMinor(total))}</b> · Добавьте каждую деталь отдельной строкой.</div>
+      <button className="primary" disabled={total <= 0} onClick={save}>Сохранить покупку</button>
     </div>);
 }
 
@@ -112,17 +123,17 @@ function Configurator({ comps, builds, byId }: { comps: Component[]; builds: Bui
         {stock.map(c => <tr key={c.id}>
           <td><input type="checkbox" checked={sel.has(c.id)} onChange={e => {
             const s = new Set(sel); e.target.checked ? s.add(c.id) : s.delete(c.id); setSel(s); }} /></td>
-          <td>{c.brand} {c.model}</td><td>{c.category}</td><td>{fmtMinor(c.priceMinor)}</td>
+          <td>{c.brand} {c.model}</td><td>{CAT_LABELS[c.category]}</td><td>{fmtMinor(c.priceMinor)}</td>
         </tr>)}
       </tbody></table>
       <div className="card">
         <div className="frm">
-          <label>Цель продажи: <input type="number" placeholder="₽" value={target} onChange={e => setTarget(e.target.value)} /></label>
+          <label>За сколько планируете продать? <input type="number" placeholder="Цена, ₽" value={target} onChange={e => setTarget(e.target.value)} /></label>
         </div>
-        <div>Себестоимость: <b>{fmtMinor(cost)}</b> · Прибыль: <b>{fmtMinor(dm.profit)}</b> · ROI: <b>{fmtPct(dm.roiPct)}</b></div>
-        {checks.map((c, i) => <div key={i}>{c.level === 'OK' ? '🟢' : c.level === 'WARN' ? '🟡' : '🔴'} {c.pair} — {c.msg}</div>)}
+        <div>Затраты: <b>{fmtMinor(cost)}</b> · Возможная прибыль: <b>{fmtMinor(dm.profit)}</b> · Доходность: <b>{fmtPct(dm.roiPct)}</b></div>
+        {checks.map((c, i) => <div key={i}>{c.level === 'OK' ? '🟢' : c.level === 'WARN' ? '🟡' : '🔴'} {PAIR_LABELS[c.pair] ?? c.pair} — {c.msg}</div>)}
         <button className="primary" disabled={!sel.size || +target <= 0 || fail} onClick={create}>
-          {fail ? 'СОЗДАТЬ СБОРКУ (🔴 несовместимости)' : 'СОБРАТЬ И ВЫСТАВИТЬ НА ПРОДАЖУ'}
+          {fail ? 'Проверьте совместимость деталей' : 'Собрать и выставить на продажу'}
         </button>
       </div>
     </div>);
@@ -164,10 +175,10 @@ function Stock({ comps, builds, byId, boxAcc }: {
         return (
           <div key={b.id} className="card">
             <b>ПК #{String(b.num).padStart(3, '0')}</b> · {specLine(b.componentIds.map(id => byId.get(id)!).filter(Boolean))}
-            <div className="row"><span>Статус</span><b>{b.status === 'SOLD' ? '🟢 продан' : b.status === 'FOR_SALE' ? '🟡 в продаже' : b.status}</b></div>
+            <div className="row"><span>Статус</span><b>{b.status === 'SOLD' ? 'Продан' : b.status === 'FOR_SALE' ? 'Выставлен на продажу' : b.status === 'STALLED' ? 'Разобран' : 'Собирается'}</b></div>
             <div className="row"><span>Себестоимость / цель</span>
               <b>{fmtMinor(fc)} / {fmtMinor(b.targetPriceMinor ?? 0)}</b></div>
-            {b.status !== 'SOLD' && <div className="row"><span>Прибыль / ROI при цели</span>
+            {b.status !== 'SOLD' && <div className="row"><span>Прибыль / доходность при продаже</span>
               <b>{fmtMinor(dm.profit)} · {fmtPct(dm.roiPct)}</b></div>}
             {b.soldAt && <div className="muted">Продан {b.soldAt}</div>}
             {b.status === 'FOR_SALE' && (
@@ -183,7 +194,7 @@ function Stock({ comps, builds, byId, boxAcc }: {
       <h3>Склад (свободные лоты)</h3>
       <table className="tbl"><thead><tr><th>Деталь</th><th>Категория</th><th>Состояние</th><th>Цена</th></tr></thead><tbody>
         {comps.filter(c => c.status === 'IN_STOCK').map(c =>
-          <tr key={c.id}><td>{c.brand} {c.model}</td><td>{c.category}</td><td>{c.condition}</td><td>{fmtMinor(c.priceMinor)}</td></tr>)}
+          <tr key={c.id}><td>{c.brand} {c.model}</td><td>{CAT_LABELS[c.category]}</td><td>{CONDITION_LABELS[c.condition]}</td><td>{fmtMinor(c.priceMinor)}</td></tr>)}
       </tbody></table>
     </div>);
 }
