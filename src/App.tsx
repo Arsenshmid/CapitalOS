@@ -5,6 +5,7 @@ import Flip from './ui/Flip';
 import Settings, { applySavedAppearance } from './ui/Settings';
 import { useData } from './hooks';
 import { fmtMinor } from './engine/utils';
+import { useCloudSync } from './cloudSync';
 
 const NAV = [
   { group: 'МОЁ ПРОСТРАНСТВО', items: [{ id: 'dash', label: 'Обзор', icon: '▦' }] },
@@ -26,6 +27,7 @@ export default function App() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
   const d = useData();
+  const sync = useCloudSync();
 
   useEffect(() => {
     applySavedAppearance();
@@ -93,7 +95,12 @@ export default function App() {
             </button>)}
           </div>)}
         </nav>
-        <div className="sidebar-bottom"><span className="status-dot" /> Данные хранятся у вас</div>
+        <div className="sidebar-bottom" data-sync-state={sync.status} title={sync.status === 'synced' ? 'Все данные синхронизированы' : 'Состояние облачной синхронизации'}>
+          <span className="status-dot" /> {sync.status === 'synced' ? 'Данные синхронизированы'
+            : sync.status === 'conflict' ? 'Нужно решить конфликт'
+            : sync.status === 'offline' ? 'Нет связи с облаком'
+            : sync.session ? 'Синхронизируем данные…' : 'Локально на этом устройстве'}
+        </div>
       </aside>
       {mobileOpen && <button className="sidebar-scrim" aria-label="Закрыть навигацию" onClick={() => setMobileOpen(false)} />}
 
@@ -114,7 +121,7 @@ export default function App() {
           {tab === 'dash' && <Dashboard go={chooseSection} />}
           {tab === 'fin' && <Finance />}
           {tab === 'flip' && <Flip />}
-          {tab === 'set' && <Settings />}
+          {tab === 'set' && <Settings sync={sync} />}
         </main>
       </div>
 

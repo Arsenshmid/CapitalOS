@@ -3,6 +3,8 @@ import { db } from '../db';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { VIRT, type Component, type CompCat } from '../types';
 import { toMinor, uid, todayISO } from '../engine/utils';
+import CloudSync from './CloudSync';
+import type { useCloudSync } from '../cloudSync';
 
 const CATS: CompCat[] = ['CPU', 'MB', 'RAM', 'GPU', 'STORAGE', 'PSU', 'CASE', 'COOLER'];
 const CAT_LABELS: Record<CompCat, string> = {
@@ -57,7 +59,7 @@ function AppearanceSettings() {
   </section>;
 }
 
-export default function Settings() {
+export default function Settings({ sync }: { sync: ReturnType<typeof useCloudSync> }) {
   const kv = useLiveQuery(() => db.kv.toArray(), []) ?? [];
   const S = Object.fromEntries(kv.map(r => [r.k, r.v]));
   const [f, setF] = useState<any>({});
@@ -92,6 +94,7 @@ export default function Settings() {
   return (
     <div>
       <AppearanceSettings />
+      <CloudSync sync={sync} />
       <section className="card">
         <h2>Параметры модели</h2>
         <div className="frm">
@@ -130,7 +133,7 @@ export default function Settings() {
             Показать демо-данные
           </button>
         </div>
-        <p className="muted">Данные хранятся только в браузере на этом устройстве. Скачайте копию, чтобы не потерять их при смене устройства или очистке браузера.</p>
+        <p className="muted">Без облачной синхронизации данные хранятся только в этом браузере. При включённой синхронизации копия находится в вашем Supabase-проекте. Резервная копия поможет восстановить данные в обоих случаях.</p>
       </section>
     </div>);
 }
