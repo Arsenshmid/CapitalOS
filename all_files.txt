@@ -74,7 +74,7 @@ echo Created all_files.txt
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:" />
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co" />
   <title>Capital OS — личные финансы</title>
 </head>
 <body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body>
@@ -2724,8 +2724,10 @@ npm test
 1. Создай проект на **supabase.com**.
 2. Открой **SQL Editor** в проекте и выполни содержимое файла `supabase/schema.sql`. Таблица защищена RLS: пользователь может читать и менять только собственную запись.
 3. В Supabase открой **Project Settings → API** и скопируй **Project URL** и публичный **publishable/anon key**. Никогда не используй `service_role` key в браузере.
-4. В Capital OS открой **Настройки → Синхронизация между устройствами**, введи URL и публичный ключ, сохрани подключение, затем создай аккаунт.
-5. На втором устройстве введи те же URL и ключ и войди в тот же аккаунт. Облачная копия загрузится автоматически; новые изменения синхронизируются через интернет.
+4. В **Authentication → URL Configuration** добавь адрес сайта в **Redirect URLs**: `https://arsenshmid.github.io/CapitalOS/`. Для локальной проверки добавь также `http://localhost:5173/CapitalOS/` и `http://127.0.0.1:5173/CapitalOS/`.
+5. В Capital OS открой **Настройки → Синхронизация между устройствами**, введи URL и публичный ключ, сохрани подключение, затем создай аккаунт.
+6. Подтверди email по ссылке из письма. Она вернёт тебя на тот адрес приложения, откуда была начата регистрация.
+7. На втором устройстве введи те же URL и ключ и войди в тот же аккаунт. Облачная копия загрузится автоматически; новые изменения синхронизируются через интернет.
 
 Первое устройство, создавшее аккаунт без облачной копии, загрузит в облако свою локальную базу. На следующем устройстве облачная версия заменит локальную копию. Если устройства изменяли данные отдельно и версии разошлись, приложение остановит синхронизацию и попросит выбрать одну версию; выбранная копия заменит другую целиком.
 
@@ -3376,7 +3378,8 @@ export function useCloudSync() {
 
   const signUp = async (email: string, password: string) => {
     if (!client) return 'Сначала сохраните URL и публичный ключ проекта Supabase.';
-    const { data, error: authError } = await client.auth.signUp({ email, password });
+    const emailRedirectTo = new URL(window.location.pathname, window.location.origin).toString();
+    const { data, error: authError } = await client.auth.signUp({ email, password, options: { emailRedirectTo } });
     if (authError) return messageFor(authError);
     return data.session ? null : 'Проверьте почту и подтвердите регистрацию, затем войдите.';
   };
